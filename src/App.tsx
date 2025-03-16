@@ -28,6 +28,11 @@ import YayasanPeriods from "@/pages/yayasan/YayasanPeriods";
 import YayasanReports from "@/pages/yayasan/YayasanReports";
 import YayasanSettings from "@/pages/yayasan/YayasanSettings";
 
+// Detail Pages
+import PondokDetail from "@/pages/yayasan/PondokDetail";
+import RabDetail from "@/pages/yayasan/RabDetail";
+import LpjDetail from "@/pages/yayasan/LpjDetail";
+
 // Shared
 import NotFound from "./pages/NotFound";
 
@@ -63,8 +68,11 @@ const App = () => (
             <Route path="/yayasan" element={<YayasanLayout />}>
               <Route path="dashboard" element={<YayasanDashboard />} />
               <Route path="pondok" element={<YayasanPondok />} />
+              <Route path="pondok/:pondokId" element={<PondokDetail />} />
               <Route path="rab" element={<YayasanRAB />} />
+              <Route path="rab/:rabId" element={<RabDetail />} />
               <Route path="lpj" element={<YayasanLPJ />} />
+              <Route path="lpj/:lpjId" element={<LpjDetail />} />
               <Route path="periods" element={<YayasanPeriods />} />
               <Route path="reports" element={<YayasanReports />} />
               <Route path="settings" element={<YayasanSettings />} />
