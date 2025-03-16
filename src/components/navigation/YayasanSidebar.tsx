@@ -61,7 +61,7 @@ const YayasanSidebar = () => {
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     asChild
-                    active={isActive(item.path)}
+                    isActive={isActive(item.path)}
                     className="gap-2"
                   >
                     <Link to={item.path}>
