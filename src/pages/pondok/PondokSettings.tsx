@@ -4,359 +4,375 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Avatar } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Save, User, Users, Bell, LogOut, Download } from 'lucide-react';
+import { User, Building, Phone, Save, Key, LogOut, MapPin } from 'lucide-react';
 
 const PondokSettings = () => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [pondokData, setPondokData] = useState({
-    nama: 'Pondok Al-Hidayah',
-    telepon: '08123456789',
-    alamat: 'Jl. Raya Pondok No. 123',
+    nama: 'Pondok Al-Hikmah',
+    alamat: 'Jl. Raya Bandung No. 123',
+    telepon: '0812-3456-7890',
+    kodePos: '40123',
     provinsi: 'Jawa Barat',
     kota: 'Bandung',
-    kecamatan: 'Coblong',
-    kelurahan: 'Dago',
-    kodePos: '40135',
+    kecamatan: 'Bandung Kulon',
+    kelurahan: 'Cibaduyut',
   });
-  
-  const [accountData, setAccountData] = useState({
-    email: 'admin@pondok-alhidayah.org',
-    name: 'Ahmad Hidayat',
-    emailNotifications: true,
-    appNotifications: true,
-  });
-  
+
   const [pengurusData, setPengurusData] = useState([
-    { id: 1, nama: 'Ahmad Hidayat', jabatan: 'Pimpinan Pondok' },
-    { id: 2, nama: 'Siti Fatimah', jabatan: 'Bendahara' },
-    { id: 3, nama: 'Muhammad Ridwan', jabatan: 'Sekretaris' },
+    { id: 1, nama: 'H. Ahmad Fauzi', jabatan: 'Ketua Pondok', telepon: '0812-3456-7890' },
+    { id: 2, nama: 'Ibu Halimah', jabatan: 'Bendahara', telepon: '0812-3456-7891' },
+    { id: 3, nama: 'Ustadz Mahmud', jabatan: 'Sekretaris', telepon: '0812-3456-7892' },
   ]);
-  
-  const [newPengurus, setNewPengurus] = useState({ nama: '', jabatan: '' });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const handlePondokChange = (e) => {
+    setPondokData({
+      ...pondokData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handlePengurusChange = (id, field, value) => {
+    setPengurusData(pengurusData.map(pengurus => 
+      pengurus.id === id ? { ...pengurus, [field]: value } : pengurus
+    ));
+  };
+
+  const handlePasswordChange = (e) => {
+    setPasswordData({
+      ...passwordData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSavePondok = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Berhasil Disimpan",
-        description: "Data pondok berhasil diperbarui",
-      });
-    }, 1000);
+    toast({
+      title: "Profil Pondok Disimpan",
+      description: "Perubahan pada profil pondok telah disimpan.",
+    });
   };
-  
-  const handleSaveAccount = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Berhasil Disimpan",
-        description: "Pengaturan akun berhasil diperbarui",
-      });
-    }, 1000);
+
+  const handleSavePengurus = () => {
+    toast({
+      title: "Data Pengurus Disimpan",
+      description: "Perubahan pada data pengurus telah disimpan.",
+    });
   };
-  
-  const handleAddPengurus = () => {
-    if (!newPengurus.nama || !newPengurus.jabatan) {
+
+  const handleChangePassword = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
-        title: "Validasi Gagal",
-        description: "Nama dan jabatan harus diisi",
+        title: "Kesalahan",
+        description: "Password baru dan konfirmasi password tidak cocok.",
         variant: "destructive",
       });
       return;
     }
     
-    setPengurusData([
-      ...pengurusData,
-      {
-        id: pengurusData.length + 1,
-        ...newPengurus
-      }
-    ]);
-    
-    setNewPengurus({ nama: '', jabatan: '' });
+    if (passwordData.newPassword.length < 8) {
+      toast({
+        title: "Kesalahan",
+        description: "Password baru harus minimal 8 karakter.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     toast({
-      title: "Pengurus Ditambahkan",
-      description: `${newPengurus.nama} (${newPengurus.jabatan}) berhasil ditambahkan`,
+      title: "Password Berhasil Diubah",
+      description: "Password akun Anda telah berhasil diubah.",
+    });
+    
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
     });
   };
-  
-  const handleExportData = () => {
+
+  const handleLogout = () => {
     toast({
-      title: "Ekspor Data",
-      description: "Data pondok berhasil diekspor ke Excel",
+      title: "Logout Berhasil",
+      description: "Anda telah berhasil keluar dari sistem.",
     });
   };
 
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Pengaturan Pondok"
-        description="Kelola data dan pengaturan pondok"
+        title="Pengaturan"
+        description="Kelola profil pondok dan akun pengguna"
       />
 
-      <Tabs defaultValue="pondok" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="pondok">Data Pondok</TabsTrigger>
-          <TabsTrigger value="pengurus">Data Pengurus</TabsTrigger>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="profile">Profil Pondok</TabsTrigger>
+          <TabsTrigger value="pengurus">Pengurus</TabsTrigger>
           <TabsTrigger value="account">Akun</TabsTrigger>
-          <TabsTrigger value="advanced">Lanjutan</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="pondok" className="space-y-4">
+        <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Informasi Pondok</CardTitle>
+              <CardTitle>Profil Pondok</CardTitle>
               <CardDescription>
-                Data dan informasi dasar pondok
+                Informasi detail tentang pondok Anda
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="w-full md:w-1/2">
                   <Label htmlFor="nama">Nama Pondok</Label>
-                  <Input 
-                    id="nama" 
-                    value={pondokData.nama}
-                    onChange={(e) => setPondokData({...pondokData, nama: e.target.value})}
-                  />
+                  <div className="flex mt-1">
+                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                      <Building className="h-4 w-4" />
+                    </span>
+                    <Input
+                      id="nama"
+                      name="nama"
+                      value={pondokData.nama}
+                      onChange={handlePondokChange}
+                      className="rounded-l-none"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
+                <div className="w-full md:w-1/2">
                   <Label htmlFor="telepon">Nomor Telepon</Label>
-                  <Input 
-                    id="telepon" 
-                    value={pondokData.telepon}
-                    onChange={(e) => setPondokData({...pondokData, telepon: e.target.value})}
-                  />
+                  <div className="flex mt-1">
+                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                      <Phone className="h-4 w-4" />
+                    </span>
+                    <Input
+                      id="telepon"
+                      name="telepon"
+                      value={pondokData.telepon}
+                      onChange={handlePondokChange}
+                      className="rounded-l-none"
+                    />
+                  </div>
                 </div>
               </div>
-              
-              <div className="space-y-2">
+
+              <div>
                 <Label htmlFor="alamat">Alamat</Label>
-                <Input 
-                  id="alamat" 
-                  value={pondokData.alamat}
-                  onChange={(e) => setPondokData({...pondokData, alamat: e.target.value})}
-                />
+                <div className="flex mt-1">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                    <MapPin className="h-4 w-4" />
+                  </span>
+                  <Input
+                    id="alamat"
+                    name="alamat"
+                    value={pondokData.alamat}
+                    onChange={handlePondokChange}
+                    className="rounded-l-none"
+                  />
+                </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
                   <Label htmlFor="provinsi">Provinsi</Label>
-                  <Input 
-                    id="provinsi" 
+                  <Input
+                    id="provinsi"
+                    name="provinsi"
                     value={pondokData.provinsi}
-                    onChange={(e) => setPondokData({...pondokData, provinsi: e.target.value})}
+                    onChange={handlePondokChange}
                   />
                 </div>
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="kota">Kota/Kabupaten</Label>
-                  <Input 
-                    id="kota" 
+                  <Input
+                    id="kota"
+                    name="kota"
                     value={pondokData.kota}
-                    onChange={(e) => setPondokData({...pondokData, kota: e.target.value})}
+                    onChange={handlePondokChange}
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="kecamatan">Kecamatan</Label>
-                  <Input 
-                    id="kecamatan" 
+                  <Input
+                    id="kecamatan"
+                    name="kecamatan"
                     value={pondokData.kecamatan}
-                    onChange={(e) => setPondokData({...pondokData, kecamatan: e.target.value})}
+                    onChange={handlePondokChange}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="kelurahan">Kelurahan/Desa</Label>
-                  <Input 
-                    id="kelurahan" 
+                <div>
+                  <Label htmlFor="kelurahan">Kelurahan</Label>
+                  <Input
+                    id="kelurahan"
+                    name="kelurahan"
                     value={pondokData.kelurahan}
-                    onChange={(e) => setPondokData({...pondokData, kelurahan: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="kodePos">Kode Pos</Label>
-                  <Input 
-                    id="kodePos" 
-                    value={pondokData.kodePos}
-                    onChange={(e) => setPondokData({...pondokData, kodePos: e.target.value})}
+                    onChange={handlePondokChange}
                   />
                 </div>
               </div>
-              
-              <Button onClick={handleSavePondok} className="mt-4" disabled={loading}>
-                {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </Button>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSavePondok} className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Simpan Perubahan
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="pengurus" className="space-y-4">
+        <TabsContent value="pengurus">
           <Card>
             <CardHeader>
-              <CardTitle>Data Pengurus Pondok</CardTitle>
+              <CardTitle>Data Pengurus</CardTitle>
               <CardDescription>
-                Kelola data pengurus pondok
+                Kelola informasi pengurus pondok
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <Input
-                    placeholder="Nama Pengurus"
-                    value={newPengurus.nama}
-                    onChange={(e) => setNewPengurus({...newPengurus, nama: e.target.value})}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="Jabatan"
-                    value={newPengurus.jabatan}
-                    onChange={(e) => setNewPengurus({...newPengurus, jabatan: e.target.value})}
-                    className="flex-1"
-                  />
-                  <Button onClick={handleAddPengurus}>Tambah Pengurus</Button>
-                </div>
-                
-                <div className="space-y-2 mt-4">
-                  {pengurusData.map((pengurus) => (
-                    <div 
-                      key={pengurus.id} 
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
-                    >
-                      <div className="flex items-center">
-                        <Avatar className="h-8 w-8 mr-2">
-                          <User className="h-4 w-4" />
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{pengurus.nama}</p>
-                          <p className="text-xs text-muted-foreground">{pengurus.jabatan}</p>
+            <CardContent className="space-y-6">
+              {pengurusData.map((pengurus, index) => (
+                <div key={pengurus.id}>
+                  {index > 0 && <Separator className="my-4" />}
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor={`nama-${pengurus.id}`}>Nama Pengurus</Label>
+                        <div className="flex mt-1">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                            <User className="h-4 w-4" />
+                          </span>
+                          <Input
+                            id={`nama-${pengurus.id}`}
+                            value={pengurus.nama}
+                            onChange={(e) => handlePengurusChange(pengurus.id, 'nama', e.target.value)}
+                            className="rounded-l-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor={`jabatan-${pengurus.id}`}>Jabatan</Label>
+                        <Input
+                          id={`jabatan-${pengurus.id}`}
+                          value={pengurus.jabatan}
+                          onChange={(e) => handlePengurusChange(pengurus.id, 'jabatan', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`telepon-${pengurus.id}`}>Nomor Telepon</Label>
+                        <div className="flex mt-1">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                            <Phone className="h-4 w-4" />
+                          </span>
+                          <Input
+                            id={`telepon-${pengurus.id}`}
+                            value={pengurus.telepon}
+                            onChange={(e) => handlePengurusChange(pengurus.id, 'telepon', e.target.value)}
+                            className="rounded-l-none"
+                          />
                         </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
+              ))}
+              
+              <div className="flex justify-end">
+                <Button onClick={handleSavePengurus} className="gap-2">
+                  <Save className="h-4 w-4" />
+                  Simpan Perubahan
+                </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="account" className="space-y-4">
+        <TabsContent value="account">
           <Card>
             <CardHeader>
               <CardTitle>Pengaturan Akun</CardTitle>
               <CardDescription>
-                Kelola akun dan preferensi notifikasi
+                Kelola keamanan dan pengaturan akun Anda
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-4">
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <User className="h-8 w-8" />
+                  <AvatarImage src="" />
+                  <AvatarFallback>AH</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-medium">{accountData.name}</h3>
-                  <p className="text-sm text-muted-foreground">{accountData.email}</p>
-                  <Button variant="link" className="p-0 h-auto mt-1 text-xs">
-                    Ganti Foto Profil
-                  </Button>
+                  <p className="font-medium">Admin Pondok Al-Hikmah</p>
+                  <p className="text-sm text-muted-foreground">admin@pondok-alhikmah.id</p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nama</Label>
-                  <Input 
-                    id="name" 
-                    value={accountData.name}
-                    onChange={(e) => setAccountData({...accountData, name: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    value={accountData.email}
-                    onChange={(e) => setAccountData({...accountData, email: e.target.value})}
-                  />
-                </div>
-              </div>
+              <Separator />
               
-              <div className="space-y-4 mt-4">
-                <h3 className="font-medium">Pengaturan Notifikasi</h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <h4 className="font-medium">Notifikasi Email</h4>
-                    <p className="text-sm text-muted-foreground">Terima pemberitahuan via email</p>
-                  </div>
-                  <Switch 
-                    checked={accountData.emailNotifications}
-                    onCheckedChange={(checked) => setAccountData({...accountData, emailNotifications: checked})}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <h4 className="font-medium">Notifikasi Aplikasi</h4>
-                    <p className="text-sm text-muted-foreground">Terima pemberitahuan di aplikasi</p>
-                  </div>
-                  <Switch 
-                    checked={accountData.appNotifications}
-                    onCheckedChange={(checked) => setAccountData({...accountData, appNotifications: checked})}
-                  />
-                </div>
-              </div>
-              
-              <Button onClick={handleSaveAccount} className="mt-4" disabled={loading}>
-                {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="advanced" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pengaturan Lanjutan</CardTitle>
-              <CardDescription>
-                Eksport data dan pengaturan lanjutan
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="space-y-4">
-                <div className="bg-muted/30 p-4 rounded-md">
-                  <h3 className="font-medium mb-2">Ekspor Data</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Ekspor data pondok, RAB, dan LPJ dalam format Excel
-                  </p>
-                  <Button variant="outline" onClick={handleExportData}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Ekspor Data
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <Key className="h-5 w-5" />
+                  Ubah Password
+                </h3>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="current-password">Password Saat Ini</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      name="currentPassword"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="new-password">Password Baru</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      name="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="confirm-password">Konfirmasi Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      name="confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                    />
+                  </div>
+                  
+                  <Button onClick={handleChangePassword} className="w-full sm:w-auto">
+                    Ubah Password
                   </Button>
                 </div>
-                
-                <div className="bg-red-50 p-4 rounded-md">
-                  <h3 className="font-medium text-red-800 mb-2">Zona Berbahaya</h3>
-                  <p className="text-sm text-red-700 mb-4">
-                    Tindakan berikut tidak dapat dibatalkan. Harap berhati-hati.
-                  </p>
-                  <div className="space-y-2">
-                    <Button variant="destructive" className="w-full">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Keluar dari Aplikasi
-                    </Button>
-                  </div>
-                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h3 className="text-lg font-medium text-red-500 mb-2">Zona Berbahaya</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Anda akan keluar dari sistem dan harus login kembali untuk mengakses.
+                </p>
+                <Button variant="destructive" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
               </div>
             </CardContent>
           </Card>

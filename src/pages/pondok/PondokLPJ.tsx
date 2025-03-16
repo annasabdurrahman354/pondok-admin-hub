@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Save, Send, Upload } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const PondokLPJ = () => {
@@ -15,27 +15,38 @@ const PondokLPJ = () => {
   const [periode, setPeriode] = useState('202306');
   const [status, setStatus] = useState('draft');
   
+  // Mock data based on RAB
   const [pemasukan, setPemasukan] = useState([
-    { id: 1, nama: 'Shodaqoh', rencana: 5000000, realisasi: 5200000 },
-    { id: 2, nama: 'Uang Sewa Santri', rencana: 15000000, realisasi: 14800000 },
+    { id: 1, nama: 'Shodaqoh', rencana: 5000000, realisasi: 4800000 },
+    { id: 2, nama: 'Uang Sewa Santri', rencana: 15000000, realisasi: 15000000 },
   ]);
   
   const [pengeluaran, setPengeluaran] = useState([
-    { id: 1, nama: 'Kebutuhan Dapur', rencana: 8000000, realisasi: 8250000 },
-    { id: 2, nama: 'Listrik dan Air', rencana: 3000000, realisasi: 2850000 },
+    { id: 1, nama: 'Kebutuhan Dapur', rencana: 8000000, realisasi: 8200000 },
+    { id: 2, nama: 'Listrik dan Air', rencana: 3000000, realisasi: 2800000 },
     { id: 3, nama: 'Gaji Pengajar', rencana: 7500000, realisasi: 7500000 },
   ]);
+  
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  const handleUpdateRealisasi = (id, value, type) => {
+  const handleChangeRealisasi = (id, type, value) => {
     if (type === 'pemasukan') {
       setPemasukan(pemasukan.map(item => 
-        item.id === id ? {...item, realisasi: parseInt(value) || 0} : item
+        item.id === id ? { ...item, realisasi: parseInt(value) } : item
       ));
     } else {
       setPengeluaran(pengeluaran.map(item => 
-        item.id === id ? {...item, realisasi: parseInt(value) || 0} : item
+        item.id === id ? { ...item, realisasi: parseInt(value) } : item
       ));
     }
+  };
+
+  const handleUploadBukti = () => {
+    toast({
+      title: "Bukti Berhasil Diunggah",
+      description: "File bukti telah berhasil diunggah ke sistem",
+    });
+    setSelectedFile(null);
   };
 
   const handleSubmit = () => {
@@ -54,8 +65,9 @@ const PondokLPJ = () => {
     }).format(amount);
   };
 
-  const calculatePercentage = (realisasi, rencana) => {
-    return rencana === 0 ? 0 : Math.round((realisasi / rencana) * 100);
+  const getPersentase = (realisasi, rencana) => {
+    if (rencana === 0) return '0%';
+    return `${Math.round((realisasi / rencana) * 100)}%`;
   };
 
   const totalRencanaPemasukan = pemasukan.reduce((sum, item) => sum + item.rencana, 0);
@@ -63,9 +75,6 @@ const PondokLPJ = () => {
   
   const totalRencanaPengeluaran = pengeluaran.reduce((sum, item) => sum + item.rencana, 0);
   const totalRealisasiPengeluaran = pengeluaran.reduce((sum, item) => sum + item.realisasi, 0);
-  
-  const rencanaSaldo = totalRencanaPemasukan - totalRencanaPengeluaran;
-  const realisasiSaldo = totalRealisasiPemasukan - totalRealisasiPengeluaran;
 
   return (
     <div className="space-y-6">
@@ -85,12 +94,12 @@ const PondokLPJ = () => {
               'bg-red-100 text-red-800'
             }`}>
               {status === 'draft' ? 'Draft' :
-               status === 'diajukan' ? 'Diajukan' :
-               status === 'diterima' ? 'Diterima' : 'Revisi'}
+              status === 'diajukan' ? 'Diajukan' :
+              status === 'diterima' ? 'Diterima' : 'Revisi'}
             </span>
             {status === 'draft' && (
               <Button onClick={handleSubmit} size="sm">
-                <Send className="w-4 h-4 mr-2" />
+                <Upload className="w-4 h-4 mr-2" />
                 Ajukan LPJ
               </Button>
             )}
@@ -101,8 +110,8 @@ const PondokLPJ = () => {
             <TabsList className="mb-4">
               <TabsTrigger value="pemasukan">Pemasukan</TabsTrigger>
               <TabsTrigger value="pengeluaran">Pengeluaran</TabsTrigger>
+              <TabsTrigger value="bukti">Bukti</TabsTrigger>
               <TabsTrigger value="summary">Ringkasan</TabsTrigger>
-              <TabsTrigger value="lampiran">Lampiran</TabsTrigger>
             </TabsList>
             
             <TabsContent value="pemasukan" className="space-y-4">
@@ -113,7 +122,7 @@ const PondokLPJ = () => {
                     <TableHead>Nama Pemasukan</TableHead>
                     <TableHead className="text-right">Rencana</TableHead>
                     <TableHead className="text-right">Realisasi</TableHead>
-                    <TableHead className="text-right">%</TableHead>
+                    <TableHead className="text-right">Persentase</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -125,9 +134,9 @@ const PondokLPJ = () => {
                       <TableCell className="text-right">
                         {status === 'draft' ? (
                           <Input 
-                            type="number" 
+                            type="number"
                             value={item.realisasi}
-                            onChange={(e) => handleUpdateRealisasi(item.id, e.target.value, 'pemasukan')}
+                            onChange={(e) => handleChangeRealisasi(item.id, 'pemasukan', e.target.value)}
                             className="w-32 text-right ml-auto"
                           />
                         ) : (
@@ -135,7 +144,7 @@ const PondokLPJ = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {calculatePercentage(item.realisasi, item.rencana)}%
+                        {getPersentase(item.realisasi, item.rencana)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -143,9 +152,7 @@ const PondokLPJ = () => {
                     <TableCell colSpan={2} className="font-bold">Total Pemasukan</TableCell>
                     <TableCell className="text-right font-bold">{formatCurrency(totalRencanaPemasukan)}</TableCell>
                     <TableCell className="text-right font-bold">{formatCurrency(totalRealisasiPemasukan)}</TableCell>
-                    <TableCell className="text-right font-bold">
-                      {calculatePercentage(totalRealisasiPemasukan, totalRencanaPemasukan)}%
-                    </TableCell>
+                    <TableCell className="text-right font-bold">{getPersentase(totalRealisasiPemasukan, totalRencanaPemasukan)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -159,7 +166,7 @@ const PondokLPJ = () => {
                     <TableHead>Nama Pengeluaran</TableHead>
                     <TableHead className="text-right">Rencana</TableHead>
                     <TableHead className="text-right">Realisasi</TableHead>
-                    <TableHead className="text-right">%</TableHead>
+                    <TableHead className="text-right">Persentase</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -171,9 +178,9 @@ const PondokLPJ = () => {
                       <TableCell className="text-right">
                         {status === 'draft' ? (
                           <Input 
-                            type="number" 
+                            type="number"
                             value={item.realisasi}
-                            onChange={(e) => handleUpdateRealisasi(item.id, e.target.value, 'pengeluaran')}
+                            onChange={(e) => handleChangeRealisasi(item.id, 'pengeluaran', e.target.value)}
                             className="w-32 text-right ml-auto"
                           />
                         ) : (
@@ -181,7 +188,7 @@ const PondokLPJ = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {calculatePercentage(item.realisasi, item.rencana)}%
+                        {getPersentase(item.realisasi, item.rencana)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -189,12 +196,47 @@ const PondokLPJ = () => {
                     <TableCell colSpan={2} className="font-bold">Total Pengeluaran</TableCell>
                     <TableCell className="text-right font-bold">{formatCurrency(totalRencanaPengeluaran)}</TableCell>
                     <TableCell className="text-right font-bold">{formatCurrency(totalRealisasiPengeluaran)}</TableCell>
-                    <TableCell className="text-right font-bold">
-                      {calculatePercentage(totalRealisasiPengeluaran, totalRencanaPengeluaran)}%
-                    </TableCell>
+                    <TableCell className="text-right font-bold">{getPersentase(totalRealisasiPengeluaran, totalRencanaPengeluaran)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
+            </TabsContent>
+            
+            <TabsContent value="bukti" className="space-y-4">
+              <Card className="border-none shadow-none">
+                <CardContent className="p-0">
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      <input
+                        type="file"
+                        id="file-upload"
+                        className="hidden"
+                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer block"
+                      >
+                        <Upload className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                        <span className="text-lg font-medium block">
+                          {selectedFile ? selectedFile.name : "Unggah Bukti LPJ"}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          Klik untuk memilih file atau seret file ke sini
+                        </span>
+                      </label>
+                    </div>
+                    
+                    {selectedFile && (
+                      <div className="flex justify-end">
+                        <Button onClick={handleUploadBukti}>
+                          Unggah Bukti
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="summary">
@@ -202,103 +244,41 @@ const PondokLPJ = () => {
                 <CardContent className="p-0">
                   <div className="grid gap-4">
                     <div className="bg-muted/30 p-4 rounded-md">
-                      <h3 className="font-medium mb-2">Ringkasan Laporan</h3>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Kategori</h4>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Rencana</h4>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Realisasi</h4>
-                          </div>
+                      <h3 className="font-medium mb-2">Ringkasan LPJ</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Total Pemasukan (Rencana):</span>
+                          <span className="font-medium">{formatCurrency(totalRencanaPemasukan)}</span>
                         </div>
-                        
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <span>Total Pemasukan</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">{formatCurrency(totalRencanaPemasukan)}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">{formatCurrency(totalRealisasiPemasukan)}</span>
-                          </div>
+                        <div className="flex justify-between">
+                          <span>Total Pemasukan (Realisasi):</span>
+                          <span className="font-medium">{formatCurrency(totalRealisasiPemasukan)}</span>
                         </div>
-                        
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <span>Total Pengeluaran</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">{formatCurrency(totalRencanaPengeluaran)}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium">{formatCurrency(totalRealisasiPengeluaran)}</span>
-                          </div>
+                        <div className="flex justify-between">
+                          <span>Total Pengeluaran (Rencana):</span>
+                          <span className="font-medium">{formatCurrency(totalRencanaPengeluaran)}</span>
                         </div>
-                        
-                        <div className="grid grid-cols-3 gap-4 border-t pt-2">
-                          <div>
-                            <span className="font-bold">Saldo Akhir</span>
-                          </div>
-                          <div>
-                            <span className={`font-bold ${rencanaSaldo >= 0 ? "text-green-600" : "text-red-600"}`}>
-                              {formatCurrency(rencanaSaldo)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className={`font-bold ${realisasiSaldo >= 0 ? "text-green-600" : "text-red-600"}`}>
-                              {formatCurrency(realisasiSaldo)}
-                            </span>
-                          </div>
+                        <div className="flex justify-between">
+                          <span>Total Pengeluaran (Realisasi):</span>
+                          <span className="font-medium">{formatCurrency(totalRealisasiPengeluaran)}</span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between font-bold">
+                          <span>Saldo Awal (Rencana):</span>
+                          <span className={totalRencanaPemasukan - totalRencanaPengeluaran >= 0 ? "text-green-600" : "text-red-600"}>
+                            {formatCurrency(totalRencanaPemasukan - totalRencanaPengeluaran)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Saldo Akhir (Realisasi):</span>
+                          <span className={totalRealisasiPemasukan - totalRealisasiPengeluaran >= 0 ? "text-green-600" : "text-red-600"}>
+                            {formatCurrency(totalRealisasiPemasukan - totalRealisasiPengeluaran)}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="lampiran">
-              <div className="grid gap-4">
-                <div className="bg-muted/30 p-6 rounded-md flex flex-col items-center justify-center">
-                  <FileText className="h-10 w-10 text-muted-foreground mb-4" />
-                  <h3 className="font-medium text-lg mb-2">Upload Bukti Pendukung</h3>
-                  <p className="text-sm text-muted-foreground mb-4 text-center">
-                    Upload nota, kwitansi, dan dokumen pendukung LPJ dalam format PDF, JPG, atau PNG
-                  </p>
-                  <Button variant="outline" className="mb-2">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Pilih Berkas
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Maksimal 5MB per file
-                  </p>
-                </div>
-                
-                <div className="mt-4">
-                  <h3 className="font-medium mb-2">Lampiran yang Diunggah</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>Nota Belanja Dapur.pdf</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">1.2 MB</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>Bukti Transfer Gaji.jpg</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">0.8 MB</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

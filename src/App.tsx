@@ -14,9 +14,19 @@ import Login from "@/pages/auth/Login";
 // Pondok Pages
 import PondokDashboard from "@/pages/pondok/PondokDashboard";
 import PondokSync from "@/pages/pondok/PondokSync";
+import PondokRAB from "@/pages/pondok/PondokRAB";
+import PondokLPJ from "@/pages/pondok/PondokLPJ";
+import PondokSettings from "@/pages/pondok/PondokSettings";
+import PondokCreate from "@/pages/pondok/PondokCreate";
 
 // Yayasan Pages
 import YayasanDashboard from "@/pages/yayasan/YayasanDashboard";
+import YayasanPondok from "@/pages/yayasan/YayasanPondok";
+import YayasanRAB from "@/pages/yayasan/YayasanRAB";
+import YayasanLPJ from "@/pages/yayasan/YayasanLPJ";
+import YayasanPeriods from "@/pages/yayasan/YayasanPeriods";
+import YayasanReports from "@/pages/yayasan/YayasanReports";
+import YayasanSettings from "@/pages/yayasan/YayasanSettings";
 
 // Shared
 import NotFound from "./pages/NotFound";
@@ -40,10 +50,10 @@ const App = () => (
             {/* Pondok Admin Routes */}
             <Route path="/pondok" element={<PondokLayout />}>
               <Route path="dashboard" element={<PondokDashboard />} />
-              <Route path="rab" element={<div>RAB Management Page (Coming Soon)</div>} />
-              <Route path="lpj" element={<div>LPJ Management Page (Coming Soon)</div>} />
-              <Route path="settings" element={<div>Pondok Settings Page (Coming Soon)</div>} />
-              <Route path="create" element={<div>Create New Document Page (Coming Soon)</div>} />
+              <Route path="rab" element={<PondokRAB />} />
+              <Route path="lpj" element={<PondokLPJ />} />
+              <Route path="settings" element={<PondokSettings />} />
+              <Route path="create" element={<PondokCreate />} />
             </Route>
             
             {/* Pondok Sync (outside of layout) */}
@@ -52,12 +62,12 @@ const App = () => (
             {/* Yayasan Admin Routes */}
             <Route path="/yayasan" element={<YayasanLayout />}>
               <Route path="dashboard" element={<YayasanDashboard />} />
-              <Route path="pondok" element={<div>Pondok Management Page (Coming Soon)</div>} />
-              <Route path="rab" element={<div>RAB Review Page (Coming Soon)</div>} />
-              <Route path="lpj" element={<div>LPJ Review Page (Coming Soon)</div>} />
-              <Route path="periods" element={<div>Submission Periods Page (Coming Soon)</div>} />
-              <Route path="reports" element={<div>Reports Page (Coming Soon)</div>} />
-              <Route path="settings" element={<div>Yayasan Settings Page (Coming Soon)</div>} />
+              <Route path="pondok" element={<YayasanPondok />} />
+              <Route path="rab" element={<YayasanRAB />} />
+              <Route path="lpj" element={<YayasanLPJ />} />
+              <Route path="periods" element={<YayasanPeriods />} />
+              <Route path="reports" element={<YayasanReports />} />
+              <Route path="settings" element={<YayasanSettings />} />
             </Route>
             
             {/* Catch-all */}
