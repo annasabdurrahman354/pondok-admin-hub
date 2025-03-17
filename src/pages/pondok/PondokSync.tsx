@@ -19,19 +19,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // Form schemas
 const pondokSchema = z.object({
   nama: z.string().min(2, { message: 'Nama pondok wajib diisi' }),
   telepon: z.string().min(2, { message: 'Nomor telepon wajib diisi' }),
   alamat: z.string().min(5, { message: 'Alamat wajib diisi' }),
-  provinsi_id: z.string().min(1, { message: 'Provinsi wajib diisi' }),
-  kota_id: z.string().min(1, { message: 'Kota wajib diisi' }),
-  kecamatan_id: z.string().min(1, { message: 'Kecamatan wajib diisi' }),
-  kelurahan_id: z.string().min(1, { message: 'Kelurahan wajib diisi' }),
+  provinsi: z.string().min(1, { message: 'Provinsi wajib diisi' }),
+  kota: z.string().min(1, { message: 'Kota wajib diisi' }),
+  kecamatan: z.string().min(1, { message: 'Kecamatan wajib diisi' }),
+  kelurahan: z.string().min(1, { message: 'Kelurahan wajib diisi' }),
   kode_pos: z.string().min(1, { message: 'Kode pos wajib diisi' }),
-  daerah_sambung_id: z.string().min(1, { message: 'Daerah sambung wajib diisi' }),
+  daerah_sambung: z.string().min(1, { message: 'Daerah sambung wajib diisi' }),
 });
 
 const pengurusSchema = z.object({
@@ -56,12 +56,12 @@ const PondokSync = () => {
       nama: '',
       telepon: '',
       alamat: '',
-      provinsi_id: '',
-      kota_id: '',
-      kecamatan_id: '',
-      kelurahan_id: '',
+      provinsi: '',
+      kota: '',
+      kecamatan: '',
+      kelurahan: '',
       kode_pos: '',
-      daerah_sambung_id: '',
+      daerah_sambung: '',
     },
   });
 
@@ -102,12 +102,12 @@ const PondokSync = () => {
           nama: pondokData.nama,
           telepon: pondokData.telepon,
           alamat: pondokData.alamat,
-          provinsi_id: parseInt(pondokData.provinsi_id),
-          kota_id: parseInt(pondokData.kota_id),
-          kecamatan_id: parseInt(pondokData.kecamatan_id),
-          kelurahan_id: parseInt(pondokData.kelurahan_id),
+          provinsi: pondokData.provinsi_id,
+          kota: pondokData.kota_id,
+          kecamatan: pondokData.kecamatan,
+          kelurahan: pondokData.kelurahan,
           kode_pos: pondokData.kode_pos,
-          daerah_sambung_id: parseInt(pondokData.daerah_sambung_id),
+          daerah_sambung: pondokData.daerah_sambung,
           status_acc: false // Pending approval
         })
         .select()
@@ -241,7 +241,7 @@ const PondokSync = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={pondokForm.control}
-                  name="provinsi_id"
+                  name="provinsi"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Provinsi</FormLabel>
@@ -254,7 +254,7 @@ const PondokSync = () => {
                 />
                 <FormField
                   control={pondokForm.control}
-                  name="kota_id"
+                  name="kota"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kota</FormLabel>
@@ -269,7 +269,7 @@ const PondokSync = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={pondokForm.control}
-                  name="kecamatan_id"
+                  name="kecamatan"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kecamatan</FormLabel>
@@ -282,7 +282,7 @@ const PondokSync = () => {
                 />
                 <FormField
                   control={pondokForm.control}
-                  name="kelurahan_id"
+                  name="kelurahan"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kelurahan</FormLabel>
@@ -296,7 +296,7 @@ const PondokSync = () => {
               </div>
               <FormField
                 control={pondokForm.control}
-                name="daerah_sambung_id"
+                name="daerah_sambung"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Daerah Sambung</FormLabel>

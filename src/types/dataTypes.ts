@@ -1,43 +1,14 @@
-
-export type Provinsi = {
-  id: number;
-  nama: string;
-};
-
-export type Kota = {
-  id: number;
-  nama: string;
-  provinsi_id: number;
-};
-
-export type Kecamatan = {
-  id: number;
-  nama: string;
-  kota_id: number;
-};
-
-export type Kelurahan = {
-  id: number;
-  nama: string;
-  kecamatan_id: number;
-};
-
-export type DaerahSambung = {
-  id: number;
-  nama: string;
-};
-
 export type Pondok = {
   id: string;
   nama: string;
   telepon: string;
   alamat: string;
-  provinsi_id: number;
-  kota_id: number;
-  kecamatan_id: number;
-  kelurahan_id: number;
+  provinsi: string;
+  kota: string;
+  kecamatan: string;
+  kelurahan: string;
   kode_pos: string;
-  daerah_sambung_id: number;
+  daerah_sambung: string;
   status_acc: boolean;
 };
 
@@ -45,40 +16,44 @@ export type PengurusPondok = {
   id: string;
   pondok_id: string;
   nama: string;
-  jabatan: "ketua" | "pinisepuh" | "bendahara" | "sekretaris";
+  jabatan: "Ketua" | "Pinisepuh" | "Bendahara" | "Sekretaris" | string;
 };
 
 export type RAB = {
   id: string;
   pondok_id: string;
   periode_id: string; // Format YYYYMM
-  status: "diajukan" | "revisi" | "diterima";
+  status: "Diajukan" | "Revisi" | "Diterima";
   submit_at: string | null; // ISO Date
   accepted_at: string | null; // ISO Date
   pesan_revisi: string | null;
+  rabPemasukan: RABPemasukan[];
+  rabPengeluaran: RABPengeluaran[];
 };
 
 export type LPJ = {
   id: string;
   pondok_id: string;
   periode_id: string; // Format YYYYMM
-  status: "diajukan" | "revisi" | "diterima";
+  status: "Diajukan" | "Revisi" | "Diterima";
   submit_at: string | null; // ISO Date
   accepted_at: string | null; // ISO Date
   pesan_revisi: string | null;
+  lpjPemasukan: LPJPemasukan[];
+  lpjPengeluaran: LPJPengeluaran[];
 };
 
 export type RABPemasukan = {
   id: string;
   rab_id: string;
-  nama: "sisa saldo" | "shodqoh" | "uang sewa santri" | string;
+  nama: "Sisa Saldo" | "Shodaqoh" | "Uang Sewa Santri" | string;
   nominal: number;
 };
 
 export type RABPengeluaran = {
   id: string;
   rab_id: string;
-  kategori: "ukhro" | "sarana prasarana" | "konsumsi" | "administrasi";
+  kategori: "Ukhro" | "Sarana Prasarana" | "Konsumsi" | "Administrasi" | string;
   nama: string;
   detail?: string;
   nominal: number;
@@ -100,9 +75,6 @@ export type LPJPengeluaran = {
   realisasi: number;
 };
 
-export type UserRole = 'admin_yayasan' | 'admin_pondok';
-
 export type PeriodeType = {
   id: string;  // Format YYYYMM
-  nama: string; // e.g., "Juni 2023"
 };

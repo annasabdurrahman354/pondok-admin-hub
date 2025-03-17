@@ -1,17 +1,10 @@
-
+import { supabase } from '@/integrations/supabase/client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { createClient } from '@supabase/supabase-js';
-
-// Create a Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Define types for our user and auth context
-export type UserRole = 'admin_yayasan' | 'admin_pondok';
+export type UserRole = 'Admin Yayasan' | 'Admin Pondok';
 
 type User = {
   id: string;
@@ -69,9 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(userData);
             
             // Redirect based on role
-            if (role === 'admin_yayasan') {
+            if (role === 'Admin Yayasan') {
               navigate('/yayasan/dashboard');
-            } else if (role === 'admin_pondok') {
+            } else if (role === 'Admin Pondok') {
               // Check if pondok data exists
               const { data: pondokData } = await supabase
                 .from('pondok')
@@ -143,9 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         const role = data.user.user_metadata.role as UserRole;
         
-        if (role === 'admin_yayasan') {
+        if (role === 'Admin Yayasan') {
           toast.success('Logged in as Admin Yayasan');
-        } else if (role === 'admin_pondok') {
+        } else if (role === 'Admin Pondok') {
           const pondokId = data.user.user_metadata.pondok_id as string;
           
           // Check if pondok data exists
