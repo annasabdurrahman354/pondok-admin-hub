@@ -1,4 +1,3 @@
-
 // Mock data for the application
 
 // Pondok data
@@ -288,20 +287,26 @@ export const getStatusBadge = (status) => {
   switch (status) {
     case 'active':
     case 'diterima':
-      return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-        {status === 'active' ? 'Aktif' : 'Diterima'}
-      </span>;
+      return {
+        label: status === 'active' ? 'Aktif' : 'Diterima',
+        className: "px-2 py-1 text-xs rounded-full bg-green-100 text-green-800"
+      };
     case 'pending':
     case 'diajukan':
-      return <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
-        {status === 'pending' ? 'Menunggu' : 'Diajukan'}
-      </span>;
+      return {
+        label: status === 'pending' ? 'Menunggu' : 'Diajukan',
+        className: "px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800"
+      };
     case 'inactive':
     case 'revisi':
-      return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
-        {status === 'inactive' ? 'Tidak Aktif' : 'Revisi'}
-      </span>;
+      return {
+        label: status === 'inactive' ? 'Tidak Aktif' : 'Revisi',
+        className: "px-2 py-1 text-xs rounded-full bg-red-100 text-red-800"
+      };
     default:
-      return null;
+      return {
+        label: status,
+        className: "px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"
+      };
   }
 };

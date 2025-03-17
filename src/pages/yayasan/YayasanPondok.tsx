@@ -84,7 +84,12 @@ const YayasanPondok = () => {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{pondok.location}</TableCell>
                     <TableCell className="hidden md:table-cell">{pondok.santriCount}</TableCell>
-                    <TableCell>{getStatusBadge(pondok.status)}</TableCell>
+                    <TableCell>
+                      {/* Use the updated statusBadge format */}
+                      <span className={getStatusBadge(pondok.status).className}>
+                        {getStatusBadge(pondok.status).label}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button

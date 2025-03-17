@@ -150,7 +150,11 @@ const YayasanRAB = () => {
                     <TableCell className="hidden md:table-cell">{rab.tanggal}</TableCell>
                     <TableCell className="hidden md:table-cell">{formatCurrency(rab.totalPemasukan)}</TableCell>
                     <TableCell className="hidden md:table-cell">{formatCurrency(rab.totalPengeluaran)}</TableCell>
-                    <TableCell>{getStatusBadge(rab.status)}</TableCell>
+                    <TableCell>
+                      <span className={getStatusBadge(rab.status).className}>
+                        {getStatusBadge(rab.status).label}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
