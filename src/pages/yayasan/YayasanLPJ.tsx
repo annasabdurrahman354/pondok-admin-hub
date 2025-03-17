@@ -151,7 +151,11 @@ const YayasanLPJ = () => {
                         {formatCurrency(lpj.totalRealisasiPemasukan - lpj.totalRealisasiPengeluaran)}
                       </span>
                     </TableCell>
-                    <TableCell>{getStatusBadge(lpj.status)}</TableCell>
+                    <TableCell>
+                      <span className={getStatusBadge(lpj.status).className}>
+                        {getStatusBadge(lpj.status).label}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
