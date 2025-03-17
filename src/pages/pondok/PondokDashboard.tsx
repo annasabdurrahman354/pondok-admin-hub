@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth, supabase } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataCard } from '@/components/ui/data-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,7 @@ type LPJSummary = {
 
 const PondokDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pondokData, setPondokData] = useState<PondokData | null>(null);
   const [rabSummary, setRabSummary] = useState<RABSummary | null>(null);
   const [lpjSummary, setLpjSummary] = useState<LPJSummary | null>(null);
