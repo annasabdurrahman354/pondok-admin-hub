@@ -101,3 +101,8 @@ export type LPJPengeluaran = {
 };
 
 export type UserRole = 'admin_yayasan' | 'admin_pondok';
+
+export type PeriodeType = {
+  id: string;  // Format YYYYMM
+  nama: string; // e.g., "Juni 2023"
+};
