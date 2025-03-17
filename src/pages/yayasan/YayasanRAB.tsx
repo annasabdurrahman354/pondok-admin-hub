@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,69 +11,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Building2, CheckCircle, Download, FileSpreadsheet, 
-  Filter, PieChart, Search, SlidersHorizontal, XCircle 
+  PieChart, Search, XCircle 
 } from 'lucide-react';
+import { 
+  rabList, pondokList, periodeList, 
+  formatCurrency, formatPeriode, getStatusBadge 
+} from '@/data/mockData';
 
 const YayasanRAB = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPondok, setSelectedPondok] = useState('all');
   const [selectedPeriode, setSelectedPeriode] = useState('all');
-  const [selectedRAB, setSelectedRAB] = useState(null);
   const [revisionNote, setRevisionNote] = useState('');
-
-  // Mock data
-  const rabList = [
-    { 
-      id: 'rab1', 
-      pondok: 'Pondok Al-Hikmah', 
-      periode: '202306', 
-      tanggal: '2023-06-10',
-      status: 'diajukan',
-      totalPemasukan: 20000000,
-      totalPengeluaran: 18500000
-    },
-    { 
-      id: 'rab2', 
-      pondok: 'Pondok Daarul Qur\'an', 
-      periode: '202306', 
-      tanggal: '2023-06-12',
-      status: 'revisi',
-      totalPemasukan: 15000000,
-      totalPengeluaran: 13800000
-    },
-    { 
-      id: 'rab3', 
-      pondok: 'Pondok Al-Barokah', 
-      periode: '202306', 
-      tanggal: '2023-06-15',
-      status: 'diterima',
-      totalPemasukan: 25000000,
-      totalPengeluaran: 23500000
-    },
-    { 
-      id: 'rab4', 
-      pondok: 'Pondok Nurul Hidayah', 
-      periode: '202305', 
-      tanggal: '2023-05-15',
-      status: 'diterima',
-      totalPemasukan: 18000000,
-      totalPengeluaran: 16500000
-    },
-  ];
-
-  const pondokList = [
-    { id: 'p1', name: 'Pondok Al-Hikmah' },
-    { id: 'p2', name: 'Pondok Daarul Qur\'an' },
-    { id: 'p3', name: 'Pondok Al-Barokah' },
-    { id: 'p4', name: 'Pondok Nurul Hidayah' },
-  ];
-
-  const periodeList = [
-    { id: '202306', name: 'Juni 2023' },
-    { id: '202305', name: 'Mei 2023' },
-    { id: '202304', name: 'April 2023' },
-  ];
 
   // Filter by search query, pondok, and periode
   const filteredRAB = rabList.filter(rab => {
@@ -83,8 +34,8 @@ const YayasanRAB = () => {
     return matchSearchQuery && matchPondok && matchPeriode;
   });
 
-  const handleViewRAB = (rab) => {
-    setSelectedRAB(rab);
+  const handleViewRAB = (rabId) => {
+    navigate(`/yayasan/rab/${rabId}`);
   };
 
   const handleApproveRAB = (id) => {
@@ -117,35 +68,6 @@ const YayasanRAB = () => {
       title: "Data Diekspor",
       description: `Data RAB dengan ID: ${id} telah diekspor ke Excel`,
     });
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const formatPeriode = (periode) => {
-    const year = periode.substring(0, 4);
-    const month = periode.substring(4, 6);
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'diajukan':
-        return <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">Diajukan</span>;
-      case 'revisi':
-        return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Revisi</span>;
-      case 'diterima':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Diterima</span>;
-      default:
-        return null;
-    }
   };
 
   return (
@@ -234,7 +156,7 @@ const YayasanRAB = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleViewRAB(rab)}
+                          onClick={() => handleViewRAB(rab.id)}
                         >
                           <PieChart className="h-4 w-4" />
                           <span className="sr-only md:not-sr-only md:ml-2">Detail</span>
@@ -322,136 +244,6 @@ const YayasanRAB = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {selectedRAB && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>Detail RAB {selectedRAB.pondok}</span>
-              <Button variant="outline" size="sm" onClick={() => setSelectedRAB(null)}>
-                Tutup Detail
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-muted/50 p-4 rounded-md">
-                  <div className="text-sm text-muted-foreground">Pondok</div>
-                  <div className="text-lg font-medium">{selectedRAB.pondok}</div>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-md">
-                  <div className="text-sm text-muted-foreground">Periode</div>
-                  <div className="text-lg font-medium">{formatPeriode(selectedRAB.periode)}</div>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-md">
-                  <div className="text-sm text-muted-foreground">Status</div>
-                  <div className="text-lg font-medium">{getStatusBadge(selectedRAB.status)}</div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Pemasukan</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(selectedRAB.totalPemasukan)}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      Total dari berbagai sumber pemasukan
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Pengeluaran</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-600">
-                      {formatCurrency(selectedRAB.totalPengeluaran)}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      Total dari berbagai pos pengeluaran
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div className="flex justify-between items-center p-4 bg-muted/50 rounded-md">
-                <div>
-                  <div className="text-sm text-muted-foreground">Saldo Akhir</div>
-                  <div className={`text-xl font-bold ${selectedRAB.totalPemasukan - selectedRAB.totalPengeluaran >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(selectedRAB.totalPemasukan - selectedRAB.totalPengeluaran)}
-                  </div>
-                </div>
-                
-                <div>
-                  <Button onClick={() => handleExportData(selectedRAB.id)} className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Unduh RAB Lengkap
-                  </Button>
-                </div>
-              </div>
-              
-              {selectedRAB.status === 'diajukan' && (
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                    onClick={() => handleApproveRAB(selectedRAB.id)}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Setujui RAB
-                  </Button>
-                  
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="text-red-600 border-red-600 hover:bg-red-50"
-                      >
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Kirim Revisi
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Kirim Revisi RAB</DialogTitle>
-                        <DialogDescription>
-                          Tambahkan catatan untuk revisi RAB dari {selectedRAB.pondok}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div>
-                          <label htmlFor="revision-note-detail" className="text-sm font-medium">
-                            Catatan Revisi
-                          </label>
-                          <Textarea
-                            id="revision-note-detail"
-                            placeholder="Masukkan catatan revisi untuk pondok"
-                            value={revisionNote}
-                            onChange={(e) => setRevisionNote(e.target.value)}
-                            rows={5}
-                          />
-                        </div>
-                        <Button 
-                          className="w-full" 
-                          onClick={() => handleSubmitRevision(selectedRAB.id)}
-                        >
-                          Kirim Revisi
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

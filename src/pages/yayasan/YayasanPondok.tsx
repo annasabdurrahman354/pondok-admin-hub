@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,54 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle, Clock, Eye, Search, XCircle } from 'lucide-react';
+import { pondokList, getStatusBadge } from '@/data/mockData';
 
 const YayasanPondok = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Mock data
-  const pondokList = [
-    { 
-      id: 'p1', 
-      name: 'Pondok Al-Hikmah', 
-      location: 'Bandung, Jawa Barat', 
-      date: '2023-06-10',
-      status: 'active',
-      santriCount: 120
-    },
-    { 
-      id: 'p2', 
-      name: 'Pondok Daarul Qur\'an', 
-      location: 'Semarang, Jawa Tengah', 
-      date: '2023-06-12',
-      status: 'pending',
-      santriCount: 85
-    },
-    { 
-      id: 'p3', 
-      name: 'Pondok Al-Barokah', 
-      location: 'Surabaya, Jawa Timur', 
-      date: '2023-05-20',
-      status: 'active',
-      santriCount: 150
-    },
-    { 
-      id: 'p4', 
-      name: 'Pondok Nurul Hidayah', 
-      location: 'Jakarta Selatan, DKI Jakarta', 
-      date: '2023-04-15',
-      status: 'active',
-      santriCount: 95
-    },
-    { 
-      id: 'p5', 
-      name: 'Pondok Al-Ikhlas', 
-      location: 'Bekasi, Jawa Barat', 
-      date: '2023-06-08',
-      status: 'inactive',
-      santriCount: 0
-    },
-  ];
 
   // Filter by search query
   const filteredPondok = pondokList.filter(pondok => 
@@ -63,10 +22,7 @@ const YayasanPondok = () => {
   );
 
   const handleViewPondok = (id) => {
-    toast({
-      title: "Melihat Detail Pondok",
-      description: `Membuka detail pondok dengan ID: ${id}`,
-    });
+    navigate(`/yayasan/pondok/${id}`);
   };
 
   const handleApprovePondok = (id) => {
@@ -82,19 +38,6 @@ const YayasanPondok = () => {
       description: `Pondok dengan ID: ${id} telah ditolak`,
       variant: "destructive",
     });
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Aktif</span>;
-      case 'pending':
-        return <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">Menunggu</span>;
-      case 'inactive':
-        return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Tidak Aktif</span>;
-      default:
-        return null;
-    }
   };
 
   return (
