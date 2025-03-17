@@ -2,12 +2,21 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
+
+// Create a Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Define types for our user and auth context
+export type UserRole = 'admin_yayasan' | 'admin_pondok';
+
 type User = {
   id: string;
   email: string;
-  role: 'admin_yayasan' | 'admin_pondok';
+  role: UserRole;
   pondokId?: string; // Only for admin_pondok
 };
 
@@ -37,55 +46,116 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkSession = async () => {
+    const setupAuthListener = async () => {
       try {
-        // Mock fetching session - will be replaced with Supabase Auth
-        const storedUser = localStorage.getItem('pondok_admin_user');
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        if (session) {
+          // Get user metadata from session
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          
+          if (authUser) {
+            const role = authUser.user_metadata.role as UserRole;
+            const pondokId = authUser.user_metadata.pondok_id as string | undefined;
+            
+            const userData: User = {
+              id: authUser.id,
+              email: authUser.email || '',
+              role,
+              ...(pondokId && { pondokId })
+            };
+            
+            setUser(userData);
+            
+            // Redirect based on role
+            if (role === 'admin_yayasan') {
+              navigate('/yayasan/dashboard');
+            } else if (role === 'admin_pondok') {
+              // Check if pondok data exists
+              const { data: pondokData } = await supabase
+                .from('pondok')
+                .select('*')
+                .eq('id', pondokId)
+                .single();
+              
+              if (!pondokData) {
+                navigate('/pondok/sync');
+              } else {
+                navigate('/pondok/dashboard');
+              }
+            }
+          }
         }
       } catch (error) {
-        console.error('Session check error:', error);
+        console.error('Auth setup error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkSession();
-  }, []);
+    // Set up auth listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        if (authUser) {
+          const role = authUser.user_metadata.role as UserRole;
+          const pondokId = authUser.user_metadata.pondok_id as string | undefined;
+          
+          const userData: User = {
+            id: authUser.id,
+            email: authUser.email || '',
+            role,
+            ...(pondokId && { pondokId })
+          };
+          
+          setUser(userData);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/login');
+      }
+    });
+
+    setupAuthListener();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
-      // Mock login - will be replaced with Supabase Auth
-      // This is for demonstration purposes only
-      if (email && password) {
-        // Mock different user roles for development
-        let mockUser: User;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data.user) {
+        const role = data.user.user_metadata.role as UserRole;
         
-        if (email.includes('yayasan')) {
-          mockUser = {
-            id: 'y-123',
-            email,
-            role: 'admin_yayasan'
-          };
+        if (role === 'admin_yayasan') {
           toast.success('Logged in as Admin Yayasan');
-          navigate('/yayasan/dashboard');
-        } else {
-          mockUser = {
-            id: 'p-456',
-            email,
-            role: 'admin_pondok',
-            pondokId: 'p-001'
-          };
+        } else if (role === 'admin_pondok') {
+          const pondokId = data.user.user_metadata.pondok_id as string;
           
           // Check if pondok data exists
-          const hasPondokData = localStorage.getItem(`pondok_data_${mockUser.pondokId}`);
+          const { data: pondokData } = await supabase
+            .from('pondok')
+            .select('*')
+            .eq('id', pondokId)
+            .single();
           
-          if (!hasPondokData) {
+          if (!pondokData) {
             toast.success('Logged in. Sync your Pondok data first');
             navigate('/pondok/sync');
           } else {
@@ -93,16 +163,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             navigate('/pondok/dashboard');
           }
         }
-        
-        // Store user in local storage
-        localStorage.setItem('pondok_admin_user', JSON.stringify(mockUser));
-        setUser(mockUser);
-      } else {
-        toast.error('Invalid credentials');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Login failed');
+      toast.error(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -111,14 +175,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Logout function
   const logout = async () => {
     try {
-      // Mock logout - will be replaced with Supabase Auth
-      localStorage.removeItem('pondok_admin_user');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
       setUser(null);
       toast.success('Logged out successfully');
       navigate('/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout error:', error);
-      toast.error('Logout failed');
+      toast.error(error.message || 'Logout failed');
     }
   };
 

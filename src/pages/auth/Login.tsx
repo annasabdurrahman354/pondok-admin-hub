@@ -13,15 +13,24 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import { AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    setError('');
+    
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || 'Failed to login');
+    }
   };
 
   return (
@@ -41,6 +50,12 @@ const Login = () => {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{error}</span>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -58,6 +73,10 @@ const Login = () => {
                   <a
                     href="#"
                     className="text-xs text-primary hover:underline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast.info('Password reset functionality is in development');
+                    }}
                   >
                     Forgot password?
                   </a>
@@ -83,9 +102,7 @@ const Login = () => {
           </form>
         </Card>
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>Demo Accounts:</p>
-          <p>yayasan@example.com / admin123 (Admin Yayasan)</p>
-          <p>pondok@example.com / admin123 (Admin Pondok)</p>
+          <p>Demo Accounts will be created in Supabase after setup</p>
         </div>
       </motion.div>
     </div>

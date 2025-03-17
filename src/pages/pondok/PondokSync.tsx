@@ -18,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/context/AuthContext';
 
 // Form schemas
 const pondokSchema = z.object({
@@ -35,6 +37,8 @@ const pondokSchema = z.object({
 const pengurusSchema = z.object({
   ketua: z.string().min(2, { message: 'Nama ketua wajib diisi' }),
   bendahara: z.string().min(2, { message: 'Nama bendahara wajib diisi' }),
+  sekretaris: z.string().min(2, { message: 'Nama sekretaris wajib diisi' }),
+  pinisepuh: z.string().min(2, { message: 'Nama pinisepuh wajib diisi' }),
 });
 
 type PondokFormValues = z.infer<typeof pondokSchema>;
@@ -42,6 +46,7 @@ type PengurusFormValues = z.infer<typeof pengurusSchema>;
 
 const PondokSync = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<'pondok' | 'pengurus'>('pondok');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,6 +70,8 @@ const PondokSync = () => {
     defaultValues: {
       ketua: '',
       bendahara: '',
+      sekretaris: '',
+      pinisepuh: '',
     },
   });
 
@@ -75,40 +82,77 @@ const PondokSync = () => {
   };
 
   const onPengurusSubmit = async (data: PengurusFormValues) => {
+    if (!user) {
+      toast.error('User session not found');
+      navigate('/login');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       // Get previously saved pondok data
       const pondokData = JSON.parse(localStorage.getItem('pondok_form_data') || '{}');
       
-      // Mock API request - this will be replaced with Supabase
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create new pondok in Supabase
+      const { data: newPondok, error: pondokError } = await supabase
+        .from('pondok')
+        .insert({
+          id: user.pondokId,
+          nama: pondokData.nama,
+          telepon: pondokData.telepon,
+          alamat: pondokData.alamat,
+          provinsi_id: parseInt(pondokData.provinsi_id),
+          kota_id: parseInt(pondokData.kota_id),
+          kecamatan_id: parseInt(pondokData.kecamatan_id),
+          kelurahan_id: parseInt(pondokData.kelurahan_id),
+          kode_pos: pondokData.kode_pos,
+          daerah_sambung_id: parseInt(pondokData.daerah_sambung_id),
+          status_acc: false // Pending approval
+        })
+        .select()
+        .single();
       
-      // Store the combined data
-      const combinedData = { 
-        ...pondokData,
-        pengurus: {
-          ketua: data.ketua,
-          bendahara: data.bendahara
+      if (pondokError) throw pondokError;
+      
+      // Insert pengurus data
+      const pengurusToInsert = [
+        { 
+          pondok_id: user.pondokId, 
+          nama: data.ketua, 
+          jabatan: 'ketua' as const 
+        },
+        { 
+          pondok_id: user.pondokId, 
+          nama: data.bendahara, 
+          jabatan: 'bendahara' as const 
+        },
+        { 
+          pondok_id: user.pondokId, 
+          nama: data.sekretaris, 
+          jabatan: 'sekretaris' as const 
+        },
+        { 
+          pondok_id: user.pondokId, 
+          nama: data.pinisepuh, 
+          jabatan: 'pinisepuh' as const 
         }
-      };
+      ];
       
-      // Store data in localStorage for demo purposes
-      localStorage.setItem('pondok_data_p-001', JSON.stringify({
-        ...combinedData,
-        id: 'p-001',
-        status_acc: false, // Pending approval
-        created_at: new Date().toISOString()
-      }));
+      const { error: pengurusError } = await supabase
+        .from('pengurus_pondok')
+        .insert(pengurusToInsert);
+      
+      if (pengurusError) throw pengurusError;
       
       // Clean up the temporary form data
       localStorage.removeItem('pondok_form_data');
       
       toast.success('Data pondok telah disimpan dan menunggu persetujuan');
       navigate('/pondok/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting pondok data:', error);
-      toast.error('Gagal menyimpan data pondok');
+      toast.error(error.message || 'Gagal menyimpan data pondok');
     } finally {
       setIsSubmitting(false);
     }
@@ -323,6 +367,32 @@ const PondokSync = () => {
                     <FormLabel>Nama Bendahara</FormLabel>
                     <FormControl>
                       <Input placeholder="Nama Bendahara Pondok" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={pengurusForm.control}
+                name="sekretaris"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Sekretaris</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nama Sekretaris Pondok" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={pengurusForm.control}
+                name="pinisepuh"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Pinisepuh</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nama Pinisepuh Pondok" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
