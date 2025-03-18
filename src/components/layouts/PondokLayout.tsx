@@ -1,12 +1,28 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import PondokNavigation from '@/components/navigation/PondokNavigation';
 import PageTransition from '@/components/layouts/PageTransition';
 
 const PondokLayout = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Already checked by ProtectedRoute, but double-check for safety
+  if (!user || user.role !== 'Admin Pondok') {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

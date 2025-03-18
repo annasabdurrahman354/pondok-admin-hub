@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import PondokLayout from "@/components/layouts/PondokLayout";
 import YayasanLayout from "@/components/layouts/YayasanLayout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Auth
 import Login from "@/pages/auth/Login";
@@ -52,30 +53,36 @@ const App = () => (
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />
             
-            {/* Pondok Admin Routes */}
-            <Route path="/pondok" element={<PondokLayout />}>
-              <Route path="dashboard" element={<PondokDashboard />} />
-              <Route path="rab" element={<PondokRAB />} />
-              <Route path="lpj" element={<PondokLPJ />} />
-              <Route path="settings" element={<PondokSettings />} />
-              <Route path="create" element={<PondokCreate />} />
+            {/* Pondok Admin Routes - Protected for Admin Pondok role */}
+            <Route element={<ProtectedRoute requiredRole="Admin Pondok" />}>
+              <Route path="/pondok" element={<PondokLayout />}>
+                <Route path="dashboard" element={<PondokDashboard />} />
+                <Route path="rab" element={<PondokRAB />} />
+                <Route path="lpj" element={<PondokLPJ />} />
+                <Route path="settings" element={<PondokSettings />} />
+                <Route path="create" element={<PondokCreate />} />
+              </Route>
             </Route>
             
-            {/* Pondok Sync (outside of layout) */}
-            <Route path="/pondok/sync" element={<PondokSync />} />
+            {/* Pondok Sync (outside of layout but still protected) */}
+            <Route element={<ProtectedRoute requiredRole="Admin Pondok" />}>
+              <Route path="/pondok/sync" element={<PondokSync />} />
+            </Route>
             
-            {/* Yayasan Admin Routes */}
-            <Route path="/yayasan" element={<YayasanLayout />}>
-              <Route path="dashboard" element={<YayasanDashboard />} />
-              <Route path="pondok" element={<YayasanPondok />} />
-              <Route path="pondok/:pondokId" element={<PondokDetail />} />
-              <Route path="rab" element={<YayasanRAB />} />
-              <Route path="rab/:rabId" element={<RabDetail />} />
-              <Route path="lpj" element={<YayasanLPJ />} />
-              <Route path="lpj/:lpjId" element={<LpjDetail />} />
-              <Route path="periods" element={<YayasanPeriods />} />
-              <Route path="reports" element={<YayasanReports />} />
-              <Route path="settings" element={<YayasanSettings />} />
+            {/* Yayasan Admin Routes - Protected for Admin Yayasan role */}
+            <Route element={<ProtectedRoute requiredRole="Admin Yayasan" />}>
+              <Route path="/yayasan" element={<YayasanLayout />}>
+                <Route path="dashboard" element={<YayasanDashboard />} />
+                <Route path="pondok" element={<YayasanPondok />} />
+                <Route path="pondok/:pondokId" element={<PondokDetail />} />
+                <Route path="rab" element={<YayasanRAB />} />
+                <Route path="rab/:rabId" element={<RabDetail />} />
+                <Route path="lpj" element={<YayasanLPJ />} />
+                <Route path="lpj/:lpjId" element={<LpjDetail />} />
+                <Route path="periods" element={<YayasanPeriods />} />
+                <Route path="reports" element={<YayasanReports />} />
+                <Route path="settings" element={<YayasanSettings />} />
+              </Route>
             </Route>
             
             {/* Catch-all */}

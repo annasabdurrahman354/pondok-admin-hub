@@ -1,7 +1,8 @@
+
 import { supabase } from '@/lib/client';
-import { fetchUserProfile } from '@/services/apiService';
+import { fetchUserProfile, fetchPondokData } from '@/services/apiService';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 // Define types for our user and auth context
@@ -39,24 +40,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Function to handle user role-based redirects
   const handleUserRedirect = async (userData: User) => {
-    if (userData.role === 'Admin Yayasan') {
-      navigate('/yayasan/dashboard');
-    } else if (userData.role === 'Admin Pondok' && userData.pondokId) {
-      // Check if pondok data exists
-      const { data: pondokData, error } = await supabase
-        .from('pondok')
-        .select('*')
-        .eq('id', userData.pondokId)
-        .single();
+    try {
+      // Check if user is on the login page and already authenticated
+      const isLoginPage = location.pathname === '/login';
       
-      if (error || !pondokData) {
-        navigate('/pondok/sync');
-      } else {
-        navigate('/pondok/dashboard');
+      if (userData.role === 'Admin Yayasan') {
+        if (isLoginPage) {
+          navigate('/yayasan/dashboard');
+        }
+      } else if (userData.role === 'Admin Pondok') {
+        if (!userData.pondokId) {
+          // If admin_pondok has no pondok_id, send to sync page
+          navigate('/pondok/sync');
+        } else {
+          // Check if pondok data exists
+          const pondokData = await fetchPondokData(userData.pondokId);
+          
+          if (!pondokData) {
+            navigate('/pondok/sync');
+          } else if (isLoginPage) {
+            navigate('/pondok/dashboard');
+          }
+        }
       }
+    } catch (error) {
+      console.error('Error in redirect:', error);
     }
   };
 
@@ -87,10 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check for existing session on mount
+  // Check for existing session on mount and set up auth listener
   useEffect(() => {
-    const setupAuthListener = async () => {
+    const checkSession = async () => {
       try {
+        setIsLoading(true);
         // Get initial session
         const { data: { session } } = await supabase.auth.getSession();
         
@@ -104,38 +117,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await handleUserRedirect(userData);
             }
           }
+        } else {
+          // If no session and not on login page, redirect to login
+          if (location.pathname !== '/login') {
+            navigate('/login');
+          }
         }
       } catch (error) {
-        console.error('Auth setup error:', error);
+        console.error('Auth session check error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Set up auth listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        
-        if (authUser) {
-          const userData = await processAuthUser(authUser);
-          if (userData) {
-            await handleUserRedirect(userData);
-          }
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        navigate('/login');
-      }
-    });
+    checkSession();
 
-    setupAuthListener();
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          setIsLoading(true);
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          
+          if (authUser) {
+            const userData = await processAuthUser(authUser);
+            if (userData) {
+              await handleUserRedirect(userData);
+            }
+          }
+          setIsLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          navigate('/login');
+        }
+      }
+    );
 
     // Cleanup subscription on unmount
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   // Login function
   const login = async (email: string, password: string) => {
