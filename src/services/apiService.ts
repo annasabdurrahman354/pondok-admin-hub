@@ -1,5 +1,4 @@
-
-import { supabase } from '@/context/AuthContext';
+import { supabase } from '@/lib/client';
 import { 
   Pondok, PengurusPondok, RAB, LPJ, 
   RABPemasukan, RABPengeluaran, 
@@ -7,6 +6,24 @@ import {
   PeriodeType
 } from '@/types/dataTypes';
 import { toast } from 'sonner';
+
+// Pondok API functions
+export const fetchUserProfile = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profile')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching user data:', error);
+    toast.error('Gagal mengambil data user');
+    return null;
+  }
+};
 
 // Periode API functions
 export const fetchPeriodes = async (): Promise<PeriodeType[]> => {

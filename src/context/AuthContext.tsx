@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/client';
+import { fetchUserProfile } from '@/services/apiService';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,6 +9,8 @@ export type UserRole = 'Admin Yayasan' | 'Admin Pondok';
 
 type User = {
   id: string;
+  nama: string;
+  nomor_telepon: string;
   email: string;
   role: UserRole;
   pondokId?: string; // Only for admin_pondok
@@ -23,7 +26,7 @@ type AuthContextType = {
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isLoading: true,
+  isLoading: false,
   login: async () => {},
   logout: async () => {},
 });
@@ -37,6 +40,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
+  // Function to handle user role-based redirects
+  const handleUserRedirect = async (userData: User) => {
+    if (userData.role === 'Admin Yayasan') {
+      navigate('/yayasan/dashboard');
+    } else if (userData.role === 'Admin Pondok' && userData.pondokId) {
+      // Check if pondok data exists
+      const { data: pondokData, error } = await supabase
+        .from('pondok')
+        .select('*')
+        .eq('id', userData.pondokId)
+        .single();
+      
+      if (error || !pondokData) {
+        navigate('/pondok/sync');
+      } else {
+        navigate('/pondok/dashboard');
+      }
+    }
+  };
+
+  // Function to process authenticated user
+  const processAuthUser = async (authUser: any) => {
+    try {
+      if (!authUser) return null;
+      
+      const userProfile = await fetchUserProfile(authUser.id);
+      if (!userProfile) return null;
+      
+      const { nama, nomor_telepon, role, pondok_id } = userProfile;
+      
+      const userData: User = {
+        id: authUser.id,
+        nama,
+        nomor_telepon,
+        email: authUser.email,
+        role: role as UserRole,
+        ...(pondok_id && { pondokId: pondok_id })
+      };
+      
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Error processing auth user:', error);
+      return null;
+    }
+  };
+
   // Check for existing session on mount
   useEffect(() => {
     const setupAuthListener = async () => {
@@ -49,34 +99,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: { user: authUser } } = await supabase.auth.getUser();
           
           if (authUser) {
-            const role = authUser.user_metadata.role as UserRole;
-            const pondokId = authUser.user_metadata.pondok_id as string | undefined;
-            
-            const userData: User = {
-              id: authUser.id,
-              email: authUser.email || '',
-              role,
-              ...(pondokId && { pondokId })
-            };
-            
-            setUser(userData);
-            
-            // Redirect based on role
-            if (role === 'Admin Yayasan') {
-              navigate('/yayasan/dashboard');
-            } else if (role === 'Admin Pondok') {
-              // Check if pondok data exists
-              const { data: pondokData } = await supabase
-                .from('pondok')
-                .select('*')
-                .eq('id', pondokId)
-                .single();
-              
-              if (!pondokData) {
-                navigate('/pondok/sync');
-              } else {
-                navigate('/pondok/dashboard');
-              }
+            const userData = await processAuthUser(authUser);
+            if (userData) {
+              await handleUserRedirect(userData);
             }
           }
         }
@@ -93,17 +118,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
         if (authUser) {
-          const role = authUser.user_metadata.role as UserRole;
-          const pondokId = authUser.user_metadata.pondok_id as string | undefined;
-          
-          const userData: User = {
-            id: authUser.id,
-            email: authUser.email || '',
-            role,
-            ...(pondokId && { pondokId })
-          };
-          
-          setUser(userData);
+          const userData = await processAuthUser(authUser);
+          if (userData) {
+            await handleUserRedirect(userData);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -134,26 +152,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data.user) {
-        const role = data.user.user_metadata.role as UserRole;
+        const userData = await processAuthUser(data.user);
         
-        if (role === 'Admin Yayasan') {
-          toast.success('Logged in as Admin Yayasan');
-        } else if (role === 'Admin Pondok') {
-          const pondokId = data.user.user_metadata.pondok_id as string;
-          
-          // Check if pondok data exists
-          const { data: pondokData } = await supabase
-            .from('pondok')
-            .select('*')
-            .eq('id', pondokId)
-            .single();
-          
-          if (!pondokData) {
-            toast.success('Logged in. Sync your Pondok data first');
-            navigate('/pondok/sync');
-          } else {
-            toast.success('Logged in as Admin Pondok');
-            navigate('/pondok/dashboard');
+        if (userData) {
+          if (userData.role === 'Admin Yayasan') {
+            toast.success('Logged in as Admin Yayasan');
+          } else if (userData.role === 'Admin Pondok') {
+            if (!userData.pondokId) {
+              toast.success('Logged in. Set up your Pondok data first');
+            } else {
+              toast.success('Logged in as Admin Pondok');
+            }
           }
         }
       }
