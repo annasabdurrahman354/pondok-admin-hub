@@ -1,3 +1,4 @@
+
 export type Pondok = {
   id: string;
   nama: string;
@@ -23,7 +24,7 @@ export type RAB = {
   id: string;
   pondok_id: string;
   periode_id: string; // Format YYYYMM
-  status: "Diajukan" | "Revisi" | "Diterima";
+  status: "diajukan" | "revisi" | "diterima";
   submit_at: string | null; // ISO Date
   accepted_at: string | null; // ISO Date
   pesan_revisi: string | null;
@@ -35,7 +36,7 @@ export type LPJ = {
   id: string;
   pondok_id: string;
   periode_id: string; // Format YYYYMM
-  status: "Diajukan" | "Revisi" | "Diterima";
+  status: "diajukan" | "revisi" | "diterima";
   submit_at: string | null; // ISO Date
   accepted_at: string | null; // ISO Date
   pesan_revisi: string | null;
