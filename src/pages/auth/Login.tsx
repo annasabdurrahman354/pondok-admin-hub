@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -28,12 +27,12 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       if (user.role === 'Admin Yayasan') {
-        navigate('/yayasan/dashboard');
+        navigate('/yayasan/dashboard', { replace: true });
       } else if (user.role === 'Admin Pondok') {
         if (!user.pondokId) {
-          navigate('/pondok/sync');
+          navigate('/pondok/sync', { replace: true });
         } else {
-          navigate('/pondok/dashboard');
+          navigate('/pondok/dashboard', { replace: true });
         }
       }
     }

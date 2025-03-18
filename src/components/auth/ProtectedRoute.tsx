@@ -11,6 +11,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
+  // Always show loading state when we're still verifying authentication
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

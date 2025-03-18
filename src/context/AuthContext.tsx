@@ -36,6 +36,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [authCheckComplete, setAuthCheckComplete] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -75,8 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const isLoginPage = location.pathname === '/login';
       
+      // Always redirect from login page if user is authenticated
       if (userData.role === 'Admin Yayasan') {
-        if (isLoginPage) {
+        if (isLoginPage || location.pathname === '/') {
           navigate('/yayasan/dashboard');
         }
       } else if (userData.role === 'Admin Pondok') {
@@ -90,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (!pondokData) {
           navigate('/pondok/sync');
-        } else if (isLoginPage) {
+        } else if (isLoginPage || location.pathname === '/') {
           navigate('/pondok/dashboard');
         }
       }
@@ -118,7 +120,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } else {
           // If no session and not on login page, redirect to login
-          if (location.pathname !== '/login') {
+          const nonAuthRoutes = ['/login'];
+          if (!nonAuthRoutes.includes(location.pathname)) {
             navigate('/login');
           }
         }
@@ -127,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } finally {
         if (mounted) {
           setIsLoading(false);
+          setAuthCheckComplete(true);
         }
       }
     };
@@ -146,11 +150,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           if (mounted) {
             setIsLoading(false);
+            setAuthCheckComplete(true);
           }
         } else if (event === 'SIGNED_OUT') {
           if (mounted) {
             setUser(null);
             navigate('/login');
+            setAuthCheckComplete(true);
           }
         }
       }
@@ -162,6 +168,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, [navigate, location.pathname]);
+
+  // Add a second effect to handle redirections on URL changes
+  useEffect(() => {
+    if (!authCheckComplete) return;
+    
+    // Don't run redirects until initial auth check is complete
+    if (user) {
+      const isLoginPage = location.pathname === '/login';
+      
+      // Redirect from login page if user is already authenticated
+      if (isLoginPage) {
+        if (user.role === 'Admin Yayasan') {
+          navigate('/yayasan/dashboard');
+        } else if (user.role === 'Admin Pondok') {
+          if (!user.pondokId) {
+            navigate('/pondok/sync');
+          } else {
+            navigate('/pondok/dashboard');
+          }
+        }
+      }
+    } else {
+      // If no user and not on login page, redirect to login
+      const nonAuthRoutes = ['/login'];
+      if (!nonAuthRoutes.includes(location.pathname) && authCheckComplete) {
+        navigate('/login');
+      }
+    }
+  }, [user, location.pathname, authCheckComplete, navigate]);
 
   // Login function
   const login = async (email: string, password: string) => {
@@ -197,6 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
+      setAuthCheckComplete(true);
     }
   };
 
