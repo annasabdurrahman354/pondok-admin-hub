@@ -5,7 +5,9 @@ import {
   LPJPemasukan, LPJPengeluaran,
   Periode,
   UserProfile,
-  User
+  User,
+  RABDetailResponse,
+  LPJDetailResponse
 } from '@/types/dataTypes';
 import { toast } from 'sonner';
 

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   fetchPondokWithPengurus,
@@ -144,7 +145,7 @@ export const useRABMutations = () => {
 
   const updateRABMutation = useMutation({
     mutationFn: (data: { rabId: string; rabData: Partial<RAB>; pemasukan?: Omit<RABPemasukan, 'id' | 'rab_id'>[]; pengeluaran?: Omit<RABPengeluaran, 'id' | 'rab_id'>[] }) => 
-      updateRAB(data.rabId, data.rabData, data.pemasukan, data.pengeluaran),
+      updateRAB(data.rabId, data.rabData, data.pemasukan as any, data.pengeluaran as any),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['rab', { id: variables.rabId }] });
       queryClient.invalidateQueries({ queryKey: ['rabs', { pondokId }] });
@@ -189,7 +190,7 @@ export const useLPJMutations = () => {
 
   const updateLPJMutation = useMutation({
     mutationFn: (data: { lpjId: string; lpjData: Partial<LPJ>; pemasukan?: Omit<LPJPemasukan, 'id' | 'lpj_id'>[]; pengeluaran?: Omit<LPJPengeluaran, 'id' | 'lpj_id'>[] }) => 
-      updateLPJ(data.lpjId, data.lpjData, data.pemasukan, data.pengeluaran),
+      updateLPJ(data.lpjId, data.lpjData, data.pemasukan as any, data.pengeluaran as any),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lpj', { id: variables.lpjId }] });
       queryClient.invalidateQueries({ queryKey: ['lpjs', { pondokId }] });

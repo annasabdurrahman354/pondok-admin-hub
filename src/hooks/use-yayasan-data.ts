@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   fetchAllPondoks,
@@ -31,13 +30,6 @@ export const useGetPendingPondoks = () => {
 };
 
 // RAB Queries
-export const useGetAllRABs = (status?: string, periodeId?: string, limit = 100) => {
-  return useQuery({
-    queryKey: ['allRABs', { status, periodeId, limit }],
-    queryFn: () => fetchAllRABs(status, periodeId, limit),
-  });
-};
-
 export const useGetRABDetail = (rabId: string) => {
   return useQuery<RABDetailResponse>({
     queryKey: ['rab', { id: rabId }],
