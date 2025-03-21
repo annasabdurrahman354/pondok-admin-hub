@@ -118,10 +118,11 @@ const PondokRABList = () => {
             buttonLink="/pondok/rab"
           />
         ) : (
-          filteredRABs.map((rab) => (
+          filteredRABs.map((rab, index) => (
             <RABItem
               key={rab.id}
               rab={rab}
+              index={index}
               onClick={() => navigate(`/pondok/rab/detail/${rab.id}`)}
             />
           ))

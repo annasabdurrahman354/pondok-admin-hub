@@ -9,10 +9,11 @@ import { motion } from 'framer-motion';
 
 interface RABItemProps {
   rab: RAB;
-  index: number;
+  index?: number;
+  onClick?: () => void;
 }
 
-const RABItem: React.FC<RABItemProps> = ({ rab, index }) => {
+const RABItem: React.FC<RABItemProps> = ({ rab, index = 0, onClick }) => {
   const statusBadge = getStatusBadge(rab.status);
   
   return (
@@ -20,7 +21,8 @@ const RABItem: React.FC<RABItemProps> = ({ rab, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex items-center justify-between p-3 rounded-md bg-muted/50"
+      className="flex items-center justify-between p-3 rounded-md bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors"
+      onClick={onClick}
     >
       <div className="flex items-center gap-3">
         <FileText className="h-5 w-5 text-muted-foreground" />
@@ -33,11 +35,13 @@ const RABItem: React.FC<RABItemProps> = ({ rab, index }) => {
         <span className={statusBadge.className}>
           {statusBadge.label}
         </span>
-        <Link to={`/pondok/rab/detail/${rab.id}`}>
-          <Button size="sm" variant="ghost">
-            <ArrowUpRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        {!onClick && (
+          <Link to={`/pondok/rab/detail/${rab.id}`}>
+            <Button size="sm" variant="ghost">
+              <ArrowUpRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        )}
       </div>
     </motion.div>
   );

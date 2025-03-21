@@ -118,10 +118,11 @@ const PondokLPJList = () => {
             buttonLink="/pondok/lpj"
           />
         ) : (
-          filteredLPJs.map((lpj) => (
+          filteredLPJs.map((lpj, index) => (
             <LPJItem
               key={lpj.id}
               lpj={lpj}
+              index={index}
               onClick={() => navigate(`/pondok/lpj/detail/${lpj.id}`)}
             />
           ))
