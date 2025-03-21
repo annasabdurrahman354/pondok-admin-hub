@@ -16,14 +16,14 @@ import { Search } from 'lucide-react';
 const YayasanLPJ = () => {
   const [activeTab, setActiveTab] = useState('diajukan');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPondok, setSelectedPondok] = useState('');
+  const [selectedPondok, setSelectedPondok] = useState('all');
   
   const { data: lpjs, isLoading } = useGetAllLPJs(activeTab);
   const { data: pondoks } = useGetAllPondoks();
   
   // Filter LPJs based on search term and selected pondok
   const filteredLPJs = lpjs?.filter(lpj => {
-    const pondokMatch = selectedPondok ? (lpj.pondok_id === selectedPondok) : true;
+    const pondokMatch = selectedPondok === 'all' ? true : (lpj.pondok_id === selectedPondok);
     const searchMatch = searchTerm 
       ? (lpj.pondok?.nama?.toLowerCase().includes(searchTerm.toLowerCase()) ||
          lpj.periode_id.includes(searchTerm))
@@ -78,7 +78,7 @@ const YayasanLPJ = () => {
                 <SelectValue placeholder="Filter berdasarkan Pondok" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Semua Pondok</SelectItem>
+                <SelectItem value="all">Semua Pondok</SelectItem>
                 {pondoks?.map((pondok) => (
                   <SelectItem key={pondok.id} value={pondok.id}>
                     {pondok.nama}
