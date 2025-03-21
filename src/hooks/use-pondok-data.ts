@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   fetchPondokWithPengurus,
@@ -133,15 +134,17 @@ export const useRABMutations = () => {
   const { user } = useSession();
   const pondokId = user?.pondok_id;
 
-  const createRAB = useMutation({
-    mutationFn: (data: { periodeId: string; pemasukan: RABPemasukan[]; pengeluaran: RABPengeluaran[] }) => 
+  const createRABMutation = useMutation({
+    mutationFn: (data: { periodeId: string; pemasukan: Omit<RABPemasukan, 'id' | 'rab_id'>[]; pengeluaran: Omit<RABPengeluaran, 'id' | 'rab_id'>[] }) => 
       createRAB(pondokId!, data.periodeId, data.pemasukan, data.pengeluaran),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rabs', { pondokId }] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rabs', { pondokId }] });
+    },
     onError: (error) => console.error('Failed to create RAB:', error),
   });
 
-  const updateRAB = useMutation({
-    mutationFn: (data: { rabId: string; rabData: Partial<RAB>; pemasukan?: RABPemasukan[]; pengeluaran?: RABPengeluaran[] }) => 
+  const updateRABMutation = useMutation({
+    mutationFn: (data: { rabId: string; rabData: Partial<RAB>; pemasukan?: Omit<RABPemasukan, 'id' | 'rab_id'>[]; pengeluaran?: Omit<RABPengeluaran, 'id' | 'rab_id'>[] }) => 
       updateRAB(data.rabId, data.rabData, data.pemasukan, data.pengeluaran),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['rab', { id: variables.rabId }] });
@@ -150,7 +153,24 @@ export const useRABMutations = () => {
     onError: (error) => console.error('Failed to update RAB:', error),
   });
 
-  return { createRAB, updateRAB };
+  const submitRABMutation = useMutation({
+    mutationFn: (rabId: string) => submitRAB(rabId),
+    onSuccess: (_, rabId) => {
+      queryClient.invalidateQueries({ queryKey: ['rab', { id: rabId }] });
+      queryClient.invalidateQueries({ queryKey: ['rabs', { pondokId }] });
+    },
+    onError: (error) => console.error('Failed to submit RAB:', error),
+  });
+
+  const deleteRABMutation = useMutation({
+    mutationFn: (rabId: string) => deleteRAB(rabId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rabs', { pondokId }] });
+    },
+    onError: (error) => console.error('Failed to delete RAB:', error),
+  });
+
+  return { createRABMutation, updateRABMutation, submitRABMutation, deleteRABMutation };
 };
 
 // LPJ Mutations
@@ -159,15 +179,17 @@ export const useLPJMutations = () => {
   const { user } = useSession();
   const pondokId = user?.pondok_id;
 
-  const createLPJ = useMutation({
-    mutationFn: (data: { periodeId: string; pemasukan: LPJPemasukan[]; pengeluaran: LPJPengeluaran[] }) => 
+  const createLPJMutation = useMutation({
+    mutationFn: (data: { periodeId: string; pemasukan: Omit<LPJPemasukan, 'id' | 'lpj_id'>[]; pengeluaran: Omit<LPJPengeluaran, 'id' | 'lpj_id'>[] }) => 
       createLPJ(pondokId!, data.periodeId, data.pemasukan, data.pengeluaran),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lpjs', { pondokId }] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lpjs', { pondokId }] });
+    },
     onError: (error) => console.error('Failed to create LPJ:', error),
   });
 
-  const updateLPJ = useMutation({
-    mutationFn: (data: { lpjId: string; lpjData: Partial<LPJ>; pemasukan?: LPJPemasukan[]; pengeluaran?: LPJPengeluaran[] }) => 
+  const updateLPJMutation = useMutation({
+    mutationFn: (data: { lpjId: string; lpjData: Partial<LPJ>; pemasukan?: Omit<LPJPemasukan, 'id' | 'lpj_id'>[]; pengeluaran?: Omit<LPJPengeluaran, 'id' | 'lpj_id'>[] }) => 
       updateLPJ(data.lpjId, data.lpjData, data.pemasukan, data.pengeluaran),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lpj', { id: variables.lpjId }] });
@@ -176,8 +198,22 @@ export const useLPJMutations = () => {
     onError: (error) => console.error('Failed to update LPJ:', error),
   });
 
-  return { createLPJ, updateLPJ };
+  const submitLPJMutation = useMutation({
+    mutationFn: (lpjId: string) => submitLPJ(lpjId),
+    onSuccess: (_, lpjId) => {
+      queryClient.invalidateQueries({ queryKey: ['lpj', { id: lpjId }] });
+      queryClient.invalidateQueries({ queryKey: ['lpjs', { pondokId }] });
+    },
+    onError: (error) => console.error('Failed to submit LPJ:', error),
+  });
+
+  const deleteLPJMutation = useMutation({
+    mutationFn: (lpjId: string) => deleteLPJ(lpjId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lpjs', { pondokId }] });
+    },
+    onError: (error) => console.error('Failed to delete LPJ:', error),
+  });
+
+  return { createLPJMutation, updateLPJMutation, submitLPJMutation, deleteLPJMutation };
 };
-
-
-

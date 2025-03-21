@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataCard } from '@/components/ui/data-card';
@@ -9,7 +10,7 @@ import RABItem from '@/components/pondok/RABItem';
 import LPJItem from '@/components/pondok/LPJItem';
 import EmptyState from '@/components/pondok/EmptyState';
 import ApprovalAlert from '@/components/pondok/ApprovalAlert';
-import { useGetPondok, useGetRABs, useGetLPJs, useGetRABDetail, useGetLPJDetail } from '@/hooks/use-pondok-data';
+import { useGetPondok, useGetRABs, useGetLPJs } from '@/hooks/use-pondok-data';
 
 const PondokDashboard: React.FC = () => {
   // Fetch pondok data
@@ -29,35 +30,16 @@ const PondokDashboard: React.FC = () => {
     isLoading: isLpjsLoading 
   } = useGetLPJs(3);
   
-  // Fetch latest RAB and LPJ details if available
-  const latestRabId = rabs[0]?.id;
-  const latestLpjId = lpjs[0]?.id;
-  
-  const { 
-    data: latestRabDetail, 
-    isLoading: isLatestRabLoading 
-  } = useGetRABDetail(latestRabId || '');
-  
-  const { 
-    data: latestLpjDetail, 
-    isLoading: isLatestLpjLoading 
-  } = useGetLPJDetail(latestLpjId || '');
-  
   // Calculate total for RAB and LPJ
-  const totalRabPemasukan = latestRabDetail?.pemasukan?.reduce(
+  const totalRabPemasukan = rabs[0]?.rabPemasukan?.reduce(
     (sum, item) => sum + item.nominal, 0
   ) || 0;
   
-  const totalLpjRealisasi = latestLpjDetail?.pemasukan?.reduce(
+  const totalLpjRealisasi = lpjs[0]?.lpjPemasukan?.reduce(
     (sum, item) => sum + item.realisasi, 0
   ) || 0;
   
-  const isLoading = 
-    isPondokLoading || 
-    isRabsLoading || 
-    isLpjsLoading || 
-    (latestRabId && isLatestRabLoading) || 
-    (latestLpjId && isLatestLpjLoading);
+  const isLoading = isPondokLoading || isRabsLoading || isLpjsLoading;
 
   if (isLoading) {
     return (
@@ -85,18 +67,18 @@ const PondokDashboard: React.FC = () => {
         <DataCard
           title="Status RAB"
           value={
-            !latestRabId ? 'Draft' :
+            !rabs[0] ? 'Draft' :
             rabs[0].status === 'diajukan' ? 'Menunggu' : 
             rabs[0].status === 'revisi' ? 'Perlu Revisi' : 
             'Disetujui'
           }
           icon={
-            !latestRabId ? <FileText className="h-4 w-4" /> :
+            !rabs[0] ? <FileText className="h-4 w-4" /> :
             rabs[0].status === 'diajukan' ? <Clock className="h-4 w-4" /> : 
             rabs[0].status === 'revisi' ? <AlertTriangle className="h-4 w-4" /> : 
             <CheckCircle className="h-4 w-4" />
           }
-          description={`Update terakhir: ${latestRabId ? formatDate(rabs[0].submit_at) : '-'}`}
+          description={`Update terakhir: ${rabs[0] ? formatDate(rabs[0].submit_at) : '-'}`}
         />
         <DataCard
           title="Total RAB"
@@ -106,18 +88,18 @@ const PondokDashboard: React.FC = () => {
         <DataCard
           title="Status LPJ"
           value={
-            !latestLpjId ? 'Draft' :
+            !lpjs[0] ? 'Draft' :
             lpjs[0].status === 'diajukan' ? 'Menunggu' : 
             lpjs[0].status === 'revisi' ? 'Perlu Revisi' : 
             'Disetujui'
           }
           icon={
-            !latestLpjId ? <FileText className="h-4 w-4" /> :
+            !lpjs[0] ? <FileText className="h-4 w-4" /> :
             lpjs[0].status === 'diajukan' ? <Clock className="h-4 w-4" /> : 
             lpjs[0].status === 'revisi' ? <AlertTriangle className="h-4 w-4" /> : 
             <CheckCircle className="h-4 w-4" />
           }
-          description={`Update terakhir: ${latestLpjId ? formatDate(lpjs[0].submit_at) : '-'}`}
+          description={`Update terakhir: ${lpjs[0] ? formatDate(lpjs[0].submit_at) : '-'}`}
         />
         <DataCard
           title="Total LPJ"

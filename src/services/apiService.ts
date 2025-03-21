@@ -290,15 +290,41 @@ export const deletePengurus = async (pengurusId: string): Promise<boolean> => {
 // RAB API functions
 export const fetchRABs = async (pondokId: string, limit = 10): Promise<RAB[]> => {
   try {
-    const { data, error } = await supabase
+    const { data: rabs, error: rabsError } = await supabase
       .from('rab')
       .select('*')
       .eq('pondok_id', pondokId)
       .order('submit_at', { ascending: false })
       .limit(limit);
     
-    if (error) throw error;
-    return data || [];
+    if (rabsError) throw rabsError;
+    
+    // Fetch the related pemasukan and pengeluaran for each RAB
+    const rabsWithDetails = await Promise.all(
+      rabs.map(async (rab) => {
+        const { data: pemasukan, error: pemasukanError } = await supabase
+          .from('rab_pemasukan')
+          .select('*')
+          .eq('rab_id', rab.id);
+        
+        if (pemasukanError) throw pemasukanError;
+        
+        const { data: pengeluaran, error: pengeluaranError } = await supabase
+          .from('rab_pengeluaran')
+          .select('*')
+          .eq('rab_id', rab.id);
+        
+        if (pengeluaranError) throw pengeluaranError;
+        
+        return {
+          ...rab,
+          rabPemasukan: pemasukan || [],
+          rabPengeluaran: pengeluaran || []
+        };
+      })
+    );
+    
+    return rabsWithDetails || [];
   } catch (error: any) {
     console.error('Error fetching RABs:', error);
     toast.error('Gagal mengambil data RAB');
@@ -306,11 +332,7 @@ export const fetchRABs = async (pondokId: string, limit = 10): Promise<RAB[]> =>
   }
 };
 
-export const fetchRABDetail = async (rabId: string): Promise<{
-  rab: RAB,
-  pemasukan: RABPemasukan[],
-  pengeluaran: RABPengeluaran[]
-} | null> => {
+export const fetchRABDetail = async (rabId: string): Promise<RAB | null> => {
   try {
     // Fetch RAB data
     const { data: rab, error: rabError } = await supabase
@@ -338,9 +360,9 @@ export const fetchRABDetail = async (rabId: string): Promise<{
     if (pengeluaranError) throw pengeluaranError;
     
     return {
-      rab,
-      pemasukan: pemasukan || [],
-      pengeluaran: pengeluaran || []
+      ...rab,
+      rabPemasukan: pemasukan || [],
+      rabPengeluaran: pengeluaran || []
     };
   } catch (error: any) {
     console.error('Error fetching RAB detail:', error);
@@ -543,15 +565,41 @@ export const deleteRAB = async (rabId: string): Promise<boolean> => {
 // LPJ API functions
 export const fetchLPJs = async (pondokId: string, limit = 10): Promise<LPJ[]> => {
   try {
-    const { data, error } = await supabase
+    const { data: lpjs, error: lpjsError } = await supabase
       .from('lpj')
       .select('*')
       .eq('pondok_id', pondokId)
       .order('submit_at', { ascending: false })
       .limit(limit);
     
-    if (error) throw error;
-    return data || [];
+    if (lpjsError) throw lpjsError;
+    
+    // Fetch the related pemasukan and pengeluaran for each LPJ
+    const lpjsWithDetails = await Promise.all(
+      lpjs.map(async (lpj) => {
+        const { data: pemasukan, error: pemasukanError } = await supabase
+          .from('lpj_pemasukan')
+          .select('*')
+          .eq('lpj_id', lpj.id);
+        
+        if (pemasukanError) throw pemasukanError;
+        
+        const { data: pengeluaran, error: pengeluaranError } = await supabase
+          .from('lpj_pengeluaran')
+          .select('*')
+          .eq('lpj_id', lpj.id);
+        
+        if (pengeluaranError) throw pengeluaranError;
+        
+        return {
+          ...lpj,
+          lpjPemasukan: pemasukan || [],
+          lpjPengeluaran: pengeluaran || []
+        };
+      })
+    );
+    
+    return lpjsWithDetails || [];
   } catch (error: any) {
     console.error('Error fetching LPJs:', error);
     toast.error('Gagal mengambil data LPJ');
@@ -559,11 +607,7 @@ export const fetchLPJs = async (pondokId: string, limit = 10): Promise<LPJ[]> =>
   }
 };
 
-export const fetchLPJDetail = async (lpjId: string): Promise<{
-  lpj: LPJ,
-  pemasukan: LPJPemasukan[],
-  pengeluaran: LPJPengeluaran[]
-} | null> => {
+export const fetchLPJDetail = async (lpjId: string): Promise<LPJ | null> => {
   try {
     // Fetch LPJ data
     const { data: lpj, error: lpjError } = await supabase
@@ -591,9 +635,9 @@ export const fetchLPJDetail = async (lpjId: string): Promise<{
     if (pengeluaranError) throw pengeluaranError;
     
     return {
-      lpj,
-      pemasukan: pemasukan || [],
-      pengeluaran: pengeluaran || []
+      ...lpj,
+      lpjPemasukan: pemasukan || [],
+      lpjPengeluaran: pengeluaran || []
     };
   } catch (error: any) {
     console.error('Error fetching LPJ detail:', error);
@@ -993,4 +1037,3 @@ export const requestLPJRevision = async (lpjId: string, message: string): Promis
     return false;
   }
 };
-

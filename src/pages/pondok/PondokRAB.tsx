@@ -1,109 +1,221 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Save, Send } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Plus, Save, Send, Trash2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useGetRABs, useRABMutations } from '@/hooks/use-pondok-data';
+import { useSession } from '@/context/SessionContext';
+import { RABPemasukan, RABPengeluaran } from '@/types/dataTypes';
+import { fetchRABPeriode } from '@/services/apiService';
+import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const PondokRAB = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useSession();
   const [activeTab, setActiveTab] = useState('pemasukan');
-  const [periode, setPeriode] = useState('202306');
-  const [status, setStatus] = useState('draft');
-  const [pemasukan, setPemasukan] = useState([
-    { id: 1, nama: 'Shodaqoh', nominal: 5000000 },
-    { id: 2, nama: 'Uang Sewa Santri', nominal: 15000000 },
-  ]);
-  const [pengeluaran, setPengeluaran] = useState([
-    { id: 1, nama: 'Kebutuhan Dapur', nominal: 8000000 },
-    { id: 2, nama: 'Listrik dan Air', nominal: 3000000 },
-    { id: 3, nama: 'Gaji Pengajar', nominal: 7500000 },
-  ]);
-  const [newItem, setNewItem] = useState({ nama: '', nominal: '' });
-
-  const handleAddItem = () => {
-    if (!newItem.nama || !newItem.nominal) {
-      toast({
-        title: "Validasi Gagal",
-        description: "Nama dan nominal harus diisi",
-        variant: "destructive",
-      });
+  const [currentPeriodeId, setCurrentPeriodeId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // RAB data state
+  const [pemasukan, setPemasukan] = useState<Omit<RABPemasukan, 'id' | 'rab_id'>[]>([]);
+  const [pengeluaran, setPengeluaran] = useState<Omit<RABPengeluaran, 'id' | 'rab_id'>[]>([]);
+  const [newPemasukan, setNewPemasukan] = useState({ nama: '', nominal: '' });
+  const [newPengeluaran, setNewPengeluaran] = useState({ 
+    kategori: 'Ukhro', 
+    nama: '', 
+    detail: '', 
+    nominal: '' 
+  });
+  
+  const { data: rabs = [], isLoading: isLoadingRabs } = useGetRABs();
+  const { createRABMutation, submitRABMutation } = useRABMutations();
+  
+  // Fetch current periode on component mount
+  useEffect(() => {
+    const getPeriode = async () => {
+      try {
+        setIsLoading(true);
+        const periode = await fetchRABPeriode();
+        if (periode) {
+          setCurrentPeriodeId(periode.id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch periode:', error);
+        toast.error('Gagal mengambil periode RAB saat ini');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    getPeriode();
+  }, []);
+  
+  // Check if user already has a RAB for the current period
+  const currentPeriodRAB = rabs.find(rab => rab.periode_id === currentPeriodeId);
+  
+  const handleAddPemasukan = () => {
+    if (!newPemasukan.nama || !newPemasukan.nominal) {
+      toast.error('Nama dan nominal harus diisi');
       return;
     }
-
-    if (activeTab === 'pemasukan') {
-      setPemasukan([...pemasukan, { 
-        id: pemasukan.length + 1, 
-        nama: newItem.nama, 
-        nominal: parseInt(newItem.nominal) 
-      }]);
-    } else {
-      setPengeluaran([...pengeluaran, { 
-        id: pengeluaran.length + 1, 
-        nama: newItem.nama, 
-        nominal: parseInt(newItem.nominal) 
-      }]);
-    }
-
-    setNewItem({ nama: '', nominal: '' });
     
-    toast({
-      title: "Item Berhasil Ditambahkan",
-      description: `Item ${newItem.nama} telah ditambahkan ke ${activeTab}`,
-    });
+    setPemasukan([...pemasukan, {
+      nama: newPemasukan.nama,
+      nominal: Number(newPemasukan.nominal)
+    }]);
+    
+    setNewPemasukan({ nama: '', nominal: '' });
+    toast.success('Item pemasukan berhasil ditambahkan');
   };
-
-  const handleSubmit = () => {
-    setStatus('diajukan');
-    toast({
-      title: "RAB Berhasil Diajukan",
-      description: "RAB untuk periode Juni 2023 telah diajukan ke Yayasan",
-    });
+  
+  const handleAddPengeluaran = () => {
+    if (!newPengeluaran.kategori || !newPengeluaran.nama || !newPengeluaran.nominal) {
+      toast.error('Kategori, nama, dan nominal harus diisi');
+      return;
+    }
+    
+    setPengeluaran([...pengeluaran, {
+      kategori: newPengeluaran.kategori,
+      nama: newPengeluaran.nama,
+      detail: newPengeluaran.detail,
+      nominal: Number(newPengeluaran.nominal)
+    }]);
+    
+    setNewPengeluaran({ kategori: 'Ukhro', nama: '', detail: '', nominal: '' });
+    toast.success('Item pengeluaran berhasil ditambahkan');
   };
-
-  const formatCurrency = (amount) => {
+  
+  const handleDeletePemasukan = (index: number) => {
+    const newPemasukan = [...pemasukan];
+    newPemasukan.splice(index, 1);
+    setPemasukan(newPemasukan);
+    toast.success('Item pemasukan berhasil dihapus');
+  };
+  
+  const handleDeletePengeluaran = (index: number) => {
+    const newPengeluaran = [...pengeluaran];
+    newPengeluaran.splice(index, 1);
+    setPengeluaran(newPengeluaran);
+    toast.success('Item pengeluaran berhasil dihapus');
+  };
+  
+  const handleCreateRAB = async () => {
+    if (!currentPeriodeId || !user?.pondok_id) {
+      toast.error('Periode RAB atau data pondok tidak tersedia');
+      return;
+    }
+    
+    if (pemasukan.length === 0 || pengeluaran.length === 0) {
+      toast.error('RAB harus memiliki minimal 1 pemasukan dan 1 pengeluaran');
+      return;
+    }
+    
+    try {
+      setIsCreating(true);
+      const rabId = await createRABMutation.mutateAsync({
+        periodeId: currentPeriodeId,
+        pemasukan,
+        pengeluaran
+      });
+      
+      if (rabId) {
+        toast.success('RAB berhasil dibuat');
+        // Navigate to detail page
+        navigate(`/pondok/rab/detail/${rabId}`);
+      }
+    } catch (error) {
+      console.error('Failed to create RAB:', error);
+      toast.error('Gagal membuat RAB');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+  
+  const formatCurrency = (amount: number | string) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(num || 0);
   };
 
+  // Calculate totals
   const totalPemasukan = pemasukan.reduce((sum, item) => sum + item.nominal, 0);
   const totalPengeluaran = pengeluaran.reduce((sum, item) => sum + item.nominal, 0);
   const saldo = totalPemasukan - totalPengeluaran;
+  
+  if (isLoading || isLoadingRabs) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (!currentPeriodeId) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Rencana Anggaran Biaya"
+          description="Buat dan kelola RAB Pondok"
+        />
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Periode RAB tidak tersedia</AlertTitle>
+          <AlertDescription>
+            Tidak ada periode RAB aktif saat ini. Silakan hubungi admin yayasan.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+  
+  if (currentPeriodRAB) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Rencana Anggaran Biaya"
+          description="Buat dan kelola RAB Pondok"
+        />
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>RAB sudah dibuat</AlertTitle>
+          <AlertDescription>
+            Anda sudah membuat RAB untuk periode ini. Silakan lihat detail RAB yang ada.
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center">
+          <Button onClick={() => navigate(`/pondok/rab/detail/${currentPeriodRAB.id}`)}>
+            Lihat Detail RAB
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader 
         title="Rencana Anggaran Biaya"
-        description="Kelola RAB untuk periode Juni 2023"
+        description={`Buat RAB untuk periode ${currentPeriodeId?.substring(0, 4) || ''}-${currentPeriodeId?.substring(4, 6) || ''}`}
       />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Detail RAB</CardTitle>
-          <div className="flex items-center gap-2">
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              status === 'draft' ? 'bg-muted text-muted-foreground' :
-              status === 'diajukan' ? 'bg-amber-100 text-amber-800' :
-              status === 'diterima' ? 'bg-green-100 text-green-800' :
-              'bg-red-100 text-red-800'
-            }`}>
-              {status === 'draft' ? 'Draft' :
-               status === 'diajukan' ? 'Diajukan' :
-               status === 'diterima' ? 'Diterima' : 'Revisi'}
-            </span>
-            {status === 'draft' && (
-              <Button onClick={handleSubmit} size="sm">
-                <Send className="w-4 h-4 mr-2" />
-                Ajukan RAB
-              </Button>
-            )}
-          </div>
+          <CardTitle>Buat RAB Baru</CardTitle>
+          <Button onClick={handleCreateRAB} disabled={isCreating || pemasukan.length === 0 || pengeluaran.length === 0}>
+            <Save className="w-4 h-4 mr-2" />
+            Simpan RAB
+          </Button>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="pemasukan" className="w-full" onValueChange={setActiveTab}>
@@ -114,25 +226,23 @@ const PondokRAB = () => {
             </TabsList>
             
             <TabsContent value="pemasukan" className="space-y-4">
-              {status === 'draft' && (
-                <div className="flex gap-2 pb-4">
-                  <Input 
-                    placeholder="Nama Pemasukan" 
-                    value={newItem.nama}
-                    onChange={(e) => setNewItem({...newItem, nama: e.target.value})}
-                  />
-                  <Input 
-                    placeholder="Nominal" 
-                    type="number"
-                    value={newItem.nominal}
-                    onChange={(e) => setNewItem({...newItem, nominal: e.target.value})}
-                  />
-                  <Button onClick={handleAddItem}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Tambah
-                  </Button>
-                </div>
-              )}
+              <div className="flex flex-col md:flex-row gap-2 pb-4">
+                <Input 
+                  placeholder="Nama Pemasukan" 
+                  value={newPemasukan.nama}
+                  onChange={(e) => setNewPemasukan({...newPemasukan, nama: e.target.value})}
+                />
+                <Input 
+                  placeholder="Nominal" 
+                  type="number"
+                  value={newPemasukan.nominal}
+                  onChange={(e) => setNewPemasukan({...newPemasukan, nominal: e.target.value})}
+                />
+                <Button onClick={handleAddPemasukan}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah
+                </Button>
+              </div>
               
               <Table>
                 <TableHeader>
@@ -140,65 +250,121 @@ const PondokRAB = () => {
                     <TableHead>No</TableHead>
                     <TableHead>Nama Pemasukan</TableHead>
                     <TableHead className="text-right">Nominal</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pemasukan.map((item, index) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{item.nama}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.nominal)}</TableCell>
+                  {pemasukan.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        Belum ada data pemasukan
+                      </TableCell>
                     </TableRow>
-                  ))}
-                  <TableRow className="border-t-2">
-                    <TableCell colSpan={2} className="font-bold">Total Pemasukan</TableCell>
-                    <TableCell className="text-right font-bold">{formatCurrency(totalPemasukan)}</TableCell>
-                  </TableRow>
+                  ) : (
+                    pemasukan.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{item.nama}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.nominal)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => handleDeletePemasukan(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                  {pemasukan.length > 0 && (
+                    <TableRow className="border-t-2">
+                      <TableCell colSpan={2} className="font-bold">Total Pemasukan</TableCell>
+                      <TableCell className="text-right font-bold">{formatCurrency(totalPemasukan)}</TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
             
             <TabsContent value="pengeluaran" className="space-y-4">
-              {status === 'draft' && (
-                <div className="flex gap-2 pb-4">
-                  <Input 
-                    placeholder="Nama Pengeluaran" 
-                    value={newItem.nama}
-                    onChange={(e) => setNewItem({...newItem, nama: e.target.value})}
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 pb-4">
+                <Select 
+                  value={newPengeluaran.kategori}
+                  onValueChange={(value) => setNewPengeluaran({...newPengeluaran, kategori: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Ukhro">Ukhro</SelectItem>
+                    <SelectItem value="Sarana Prasarana">Sarana Prasarana</SelectItem>
+                    <SelectItem value="Konsumsi">Konsumsi</SelectItem>
+                    <SelectItem value="Administrasi">Administrasi</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input 
+                  placeholder="Nama Pengeluaran" 
+                  value={newPengeluaran.nama}
+                  onChange={(e) => setNewPengeluaran({...newPengeluaran, nama: e.target.value})}
+                />
+                <Input 
+                  placeholder="Detail (opsional)" 
+                  value={newPengeluaran.detail}
+                  onChange={(e) => setNewPengeluaran({...newPengeluaran, detail: e.target.value})}
+                />
+                <div className="flex gap-2">
                   <Input 
                     placeholder="Nominal" 
                     type="number"
-                    value={newItem.nominal}
-                    onChange={(e) => setNewItem({...newItem, nominal: e.target.value})}
+                    value={newPengeluaran.nominal}
+                    onChange={(e) => setNewPengeluaran({...newPengeluaran, nominal: e.target.value})}
                   />
-                  <Button onClick={handleAddItem}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Tambah
+                  <Button onClick={handleAddPengeluaran}>
+                    <Plus className="w-4 h-4" />
                   </Button>
                 </div>
-              )}
+              </div>
               
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>No</TableHead>
+                    <TableHead>Kategori</TableHead>
                     <TableHead>Nama Pengeluaran</TableHead>
+                    <TableHead>Detail</TableHead>
                     <TableHead className="text-right">Nominal</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pengeluaran.map((item, index) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{item.nama}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.nominal)}</TableCell>
+                  {pengeluaran.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        Belum ada data pengeluaran
+                      </TableCell>
                     </TableRow>
-                  ))}
-                  <TableRow className="border-t-2">
-                    <TableCell colSpan={2} className="font-bold">Total Pengeluaran</TableCell>
-                    <TableCell className="text-right font-bold">{formatCurrency(totalPengeluaran)}</TableCell>
-                  </TableRow>
+                  ) : (
+                    pengeluaran.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{item.kategori}</TableCell>
+                        <TableCell>{item.nama}</TableCell>
+                        <TableCell>{item.detail || '-'}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.nominal)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => handleDeletePengeluaran(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                  {pengeluaran.length > 0 && (
+                    <TableRow className="border-t-2">
+                      <TableCell colSpan={4} className="font-bold">Total Pengeluaran</TableCell>
+                      <TableCell className="text-right font-bold">{formatCurrency(totalPengeluaran)}</TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
@@ -225,6 +391,26 @@ const PondokRAB = () => {
                           </span>
                         </div>
                       </div>
+                    </div>
+                    
+                    {saldo < 0 && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Peringatan Saldo Negatif</AlertTitle>
+                        <AlertDescription>
+                          Total pengeluaran melebihi total pemasukan. Silakan sesuaikan RAB Anda.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={handleCreateRAB} 
+                        disabled={isCreating || pemasukan.length === 0 || pengeluaran.length === 0}
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Simpan RAB
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
