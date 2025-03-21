@@ -792,3 +792,205 @@ export const deleteLPJ = async (lpjId: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Yayasan API functions
+export const fetchAllPondoks = async (): Promise<Pondok[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('pondok')
+      .select('*')
+      .order('nama');
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error('Error fetching all pondoks:', error);
+    toast.error('Gagal mengambil data pondok');
+    return [];
+  }
+};
+
+export const fetchPendingPondoks = async (): Promise<Pondok[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('pondok')
+      .select('*')
+      .eq('status_acc', false)
+      .order('nama');
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error('Error fetching pending pondoks:', error);
+    toast.error('Gagal mengambil data pondok yang belum disetujui');
+    return [];
+  }
+};
+
+export const approvePondok = async (pondokId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('pondok')
+      .update({ status_acc: true })
+      .eq('id', pondokId);
+    
+    if (error) throw error;
+    toast.success('Pondok berhasil disetujui');
+    return true;
+  } catch (error: any) {
+    console.error('Error approving pondok:', error);
+    toast.error('Gagal menyetujui pondok');
+    return false;
+  }
+};
+
+// Yayasan RAB Management
+export const fetchAllRABs = async (status?: string, periodeId?: string, limit = 100): Promise<RAB[]> => {
+  try {
+    let query = supabase
+      .from('rab')
+      .select(`
+        *,
+        pondok:pondok_id (nama)
+      `)
+      .order('submit_at', { ascending: false });
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    if (periodeId) {
+      query = query.eq('periode_id', periodeId);
+    }
+    
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error('Error fetching all RABs:', error);
+    toast.error('Gagal mengambil data RAB');
+    return [];
+  }
+};
+
+export const approveRAB = async (rabId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('rab')
+      .update({
+        status: 'diterima',
+        accepted_at: new Date().toISOString(),
+        pesan_revisi: null
+      })
+      .eq('id', rabId);
+    
+    if (error) throw error;
+    toast.success('RAB berhasil disetujui');
+    return true;
+  } catch (error: any) {
+    console.error('Error approving RAB:', error);
+    toast.error('Gagal menyetujui RAB');
+    return false;
+  }
+};
+
+export const requestRABRevision = async (rabId: string, message: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('rab')
+      .update({
+        status: 'revisi',
+        pesan_revisi: message
+      })
+      .eq('id', rabId);
+    
+    if (error) throw error;
+    toast.success('Permintaan revisi RAB berhasil dikirim');
+    return true;
+  } catch (error: any) {
+    console.error('Error requesting RAB revision:', error);
+    toast.error('Gagal mengirim permintaan revisi RAB');
+    return false;
+  }
+};
+
+// Yayasan LPJ Management
+export const fetchAllLPJs = async (status?: string, periodeId?: string, limit = 100): Promise<LPJ[]> => {
+  try {
+    let query = supabase
+      .from('lpj')
+      .select(`
+        *,
+        pondok:pondok_id (nama)
+      `)
+      .order('submit_at', { ascending: false });
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    if (periodeId) {
+      query = query.eq('periode_id', periodeId);
+    }
+    
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error('Error fetching all LPJs:', error);
+    toast.error('Gagal mengambil data LPJ');
+    return [];
+  }
+};
+
+export const approveLPJ = async (lpjId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('lpj')
+      .update({
+        status: 'diterima',
+        accepted_at: new Date().toISOString(),
+        pesan_revisi: null
+      })
+      .eq('id', lpjId);
+    
+    if (error) throw error;
+    toast.success('LPJ berhasil disetujui');
+    return true;
+  } catch (error: any) {
+    console.error('Error approving LPJ:', error);
+    toast.error('Gagal menyetujui LPJ');
+    return false;
+  }
+};
+
+export const requestLPJRevision = async (lpjId: string, message: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('lpj')
+      .update({
+        status: 'revisi',
+        pesan_revisi: message
+      })
+      .eq('id', lpjId);
+    
+    if (error) throw error;
+    toast.success('Permintaan revisi LPJ berhasil dikirim');
+    return true;
+  } catch (error: any) {
+    console.error('Error requesting LPJ revision:', error);
+    toast.error('Gagal mengirim permintaan revisi LPJ');
+    return false;
+  }
+};
+

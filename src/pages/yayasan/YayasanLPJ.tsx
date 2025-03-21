@@ -1,251 +1,129 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React, { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Building2, CheckCircle, FileDown, Eye, XCircle, Search
-} from 'lucide-react';
-import { 
-  lpjList, pondokList, periodeList, 
-  formatCurrency, formatPeriode, getStatusBadge 
-} from '@/data/mockData';
+import { Link } from 'react-router-dom';
+import { useGetAllLPJs, useGetAllPondoks } from '@/hooks/use-yayasan-data';
+import { formatDate } from '@/services/formatUtils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Search } from 'lucide-react';
 
 const YayasanLPJ = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPondok, setSelectedPondok] = useState('all');
-  const [selectedPeriode, setSelectedPeriode] = useState('all');
-  const [revisionNote, setRevisionNote] = useState('');
-
-  // Filter by search query, pondok, and periode
-  const filteredLPJ = lpjList.filter(lpj => {
-    const matchSearchQuery = lpj.pondok.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchPondok = selectedPondok === 'all' || lpj.pondok === selectedPondok;
-    const matchPeriode = selectedPeriode === 'all' || lpj.periode === selectedPeriode;
-    return matchSearchQuery && matchPondok && matchPeriode;
+  const [activeTab, setActiveTab] = useState('diajukan');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPondok, setSelectedPondok] = useState('');
+  
+  const { data: lpjs, isLoading } = useGetAllLPJs(activeTab);
+  const { data: pondoks } = useGetAllPondoks();
+  
+  // Filter LPJs based on search term and selected pondok
+  const filteredLPJs = lpjs?.filter(lpj => {
+    const pondokMatch = selectedPondok ? (lpj.pondok_id === selectedPondok) : true;
+    const searchMatch = searchTerm 
+      ? (lpj.pondok?.nama?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         lpj.periode_id.includes(searchTerm))
+      : true;
+    return pondokMatch && searchMatch;
   });
-
-  const handleViewLPJ = (lpjId) => {
-    navigate(`/yayasan/lpj/${lpjId}`);
-  };
-
-  const handleApproveLPJ = (id) => {
-    toast({
-      title: "LPJ Disetujui",
-      description: `LPJ dengan ID: ${id} telah disetujui`,
-    });
-  };
-
-  const handleSubmitRevision = (id) => {
-    if (!revisionNote.trim()) {
-      toast({
-        title: "Catatan Revisi Kosong",
-        description: "Harap masukkan catatan revisi untuk ditambahkan",
-        variant: "destructive",
-      });
-      return;
+  
+  const getStatusBadge = (status: string) => {
+    if (status === 'diajukan') {
+      return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Diajukan</Badge>;
+    } else if (status === 'revisi') {
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Revisi</Badge>;
+    } else if (status === 'diterima') {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Diterima</Badge>;
     }
-    
-    toast({
-      title: "Revisi Dikirim",
-      description: `Catatan revisi untuk LPJ dengan ID: ${id} telah dikirim`,
-    });
-    
-    setRevisionNote('');
-  };
-
-  const handleDownloadBukti = (bukti) => {
-    toast({
-      title: "Bukti Diunduh",
-      description: `File bukti ${bukti} telah diunduh`,
-    });
+    return <Badge>{status}</Badge>;
   };
 
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Review LPJ"
-        description="Tinjau dan proses LPJ dari pondok"
+        title="Laporan Pertanggungjawaban"
+        description="Kelola LPJ dari semua Pondok"
       />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Daftar LPJ</CardTitle>
-          
-          <div className="flex flex-col sm:flex-row gap-3 items-end">
-            <div className="flex gap-2">
-              <div>
-                <select 
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={selectedPondok}
-                  onChange={(e) => setSelectedPondok(e.target.value)}
-                >
-                  <option value="all">Semua Pondok</option>
-                  {pondokList.map(pondok => (
-                    <option key={pondok.id} value={pondok.name}>{pondok.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <select 
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={selectedPeriode}
-                  onChange={(e) => setSelectedPeriode(e.target.value)}
-                >
-                  <option value="all">Semua Periode</option>
-                  {periodeList.map(periode => (
-                    <option key={periode.id} value={periode.id}>{periode.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Cari pondok..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <Tabs defaultValue="diajukan" className="w-[400px]" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="diajukan">Diajukan</TabsTrigger>
+                <TabsTrigger value="revisi">Revisi</TabsTrigger>
+                <TabsTrigger value="diterima">Diterima</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">No</TableHead>
-                <TableHead>Pondok</TableHead>
-                <TableHead className="hidden md:table-cell">Periode</TableHead>
-                <TableHead className="hidden md:table-cell">Tanggal</TableHead>
-                <TableHead className="hidden lg:table-cell">Saldo Akhir</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Tindakan</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLPJ.length > 0 ? (
-                filteredLPJ.map((lpj, index) => (
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative w-full md:w-1/2">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari LPJ berdasarkan nama pondok atau periode..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={selectedPondok} onValueChange={setSelectedPondok}>
+              <SelectTrigger className="w-full md:w-1/2">
+                <SelectValue placeholder="Filter berdasarkan Pondok" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Semua Pondok</SelectItem>
+                {pondoks?.map((pondok) => (
+                  <SelectItem key={pondok.id} value={pondok.id}>
+                    {pondok.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : filteredLPJs?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Tidak ada LPJ yang {activeTab === 'diajukan' ? 'diajukan' : activeTab === 'revisi' ? 'perlu direvisi' : 'diterima'}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Pondok</TableHead>
+                  <TableHead>Periode</TableHead>
+                  <TableHead>Tanggal Pengajuan</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredLPJs?.map((lpj: any) => (
                   <TableRow key={lpj.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>
-                      <div className="font-medium">{lpj.pondok}</div>
-                      <div className="text-xs text-muted-foreground md:hidden">
-                        {formatPeriode(lpj.periode)} • {lpj.tanggal}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{formatPeriode(lpj.periode)}</TableCell>
-                    <TableCell className="hidden md:table-cell">{lpj.tanggal}</TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <span className={lpj.totalRealisasiPemasukan - lpj.totalRealisasiPengeluaran >= 0 ? "text-green-600" : "text-red-600"}>
-                        {formatCurrency(lpj.totalRealisasiPemasukan - lpj.totalRealisasiPengeluaran)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={getStatusBadge(lpj.status).className}>
-                        {getStatusBadge(lpj.status).label}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewLPJ(lpj.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only md:not-sr-only md:ml-2">Detail</span>
-                        </Button>
-                        
-                        {lpj.status === 'diajukan' && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => handleApproveLPJ(lpj.id)}
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              <span className="sr-only md:not-sr-only md:ml-2">Setuju</span>
-                            </Button>
-                            
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                  <span className="sr-only md:not-sr-only md:ml-2">Revisi</span>
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Kirim Revisi LPJ</DialogTitle>
-                                  <DialogDescription>
-                                    Tambahkan catatan untuk revisi LPJ dari {lpj.pondok}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 py-4">
-                                  <div>
-                                    <label htmlFor="revision-note" className="text-sm font-medium">
-                                      Catatan Revisi
-                                    </label>
-                                    <Textarea
-                                      id="revision-note"
-                                      placeholder="Masukkan catatan revisi untuk pondok"
-                                      value={revisionNote}
-                                      onChange={(e) => setRevisionNote(e.target.value)}
-                                      rows={5}
-                                    />
-                                  </div>
-                                  <Button 
-                                    className="w-full" 
-                                    onClick={() => handleSubmitRevision(lpj.id)}
-                                  >
-                                    Kirim Revisi
-                                  </Button>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          </>
-                        )}
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadBukti(lpj.bukti)}
-                        >
-                          <FileDown className="h-4 w-4" />
-                          <span className="sr-only md:not-sr-only md:ml-2">Bukti</span>
-                        </Button>
-                      </div>
+                    <TableCell className="font-medium">{lpj.pondok?.nama || 'Unknown Pondok'}</TableCell>
+                    <TableCell>{lpj.periode_id.substring(0, 4)}/{lpj.periode_id.substring(4, 6)}</TableCell>
+                    <TableCell>{formatDate(lpj.submit_at)}</TableCell>
+                    <TableCell>{getStatusBadge(lpj.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={`/yayasan/lpj/${lpj.id}`}>Detail</Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <Building2 className="h-8 w-8 mb-2" />
-                      <p>Tidak ada LPJ yang ditemukan</p>
-                      <p className="text-sm">Coba dengan filter lain atau ulangi pencarian</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -150,12 +150,15 @@ export type Database = {
       periode: {
         Row: {
           id: string
+          tahap: string
         }
         Insert: {
           id: string
+          tahap?: string
         }
         Update: {
           id?: string
+          tahap?: string
         }
         Relationships: []
       }

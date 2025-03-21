@@ -1,293 +1,218 @@
-import { useState } from 'react';
+
+import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
-import { DataCard } from '@/components/ui/data-card';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, FileText, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { Check, AlertTriangle, FileText, FileBarChart, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useGetPendingPondoks, useGetAllRABs, useGetAllLPJs, useYayasanMutations } from '@/hooks/use-yayasan-data';
+import { Badge } from '@/components/ui/badge';
+import { formatDate } from '@/services/formatUtils';
 
 const YayasanDashboard = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('202306');
+  const { data: pendingPondoks, isLoading: isPondoksLoading } = useGetPendingPondoks();
+  const { data: pendingRABs, isLoading: isRABsLoading } = useGetAllRABs('diajukan', undefined, 5);
+  const { data: pendingLPJs, isLoading: isLPJsLoading } = useGetAllLPJs('diajukan', undefined, 5);
+  
+  const { approvePondokMutation } = useYayasanMutations();
 
-  // Mock data for demonstration
-  const stats = {
-    pondok: {
-      total: 25,
-      active: 23,
-      pending: 2,
-    },
-    rab: {
-      total: 23,
-      approved: 18,
-      pending: 3,
-      revision: 2,
-    },
-    lpj: {
-      total: 20,
-      approved: 18,
-      pending: 1,
-      revision: 1,
-    },
-    totalBudget: 'Rp 375,500,000',
+  const handleApprovePondok = (pondokId: string) => {
+    approvePondokMutation.mutate(pondokId);
   };
 
-  const pendingPondok = [
-    { id: 'p1', name: 'Pondok Al-Hikmah', location: 'Bandung, Jawa Barat', date: '2023-06-10' },
-    { id: 'p2', name: 'Pondok Daarul Qur\'an', location: 'Semarang, Jawa Tengah', date: '2023-06-12' },
-  ];
-
-  const pendingRab = [
-    { id: 'r1', pondok: 'Pondok Al-Hikmah', amount: 'Rp 15,000,000', date: '2023-06-15' },
-    { id: 'r2', pondok: 'Pondok Al-Ikhlas', amount: 'Rp 12,500,000', date: '2023-06-14' },
-    { id: 'r3', pondok: 'Pondok Miftahul Jannah', amount: 'Rp 18,200,000', date: '2023-06-13' },
-  ];
-
-  const pendingLpj = [
-    { id: 'l1', pondok: 'Pondok Al-Barokah', amount: 'Rp 14,500,000', date: '2023-06-05' },
-  ];
-
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between mb-6 gap-4 items-start">
-        <PageHeader
-          title="Dashboard Admin Yayasan"
-          description="Overview dan pengelolaan pondok"
-        />
-        
-        <div className="w-full md:w-auto">
-          <Select defaultValue={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Pilih Periode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="202306">Juni 2023</SelectItem>
-              <SelectItem value="202305">Mei 2023</SelectItem>
-              <SelectItem value="202304">April 2023</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <DataCard
-          title="Total Pondok"
-          value={stats.pondok.total}
-          description={`${stats.pondok.active} aktif, ${stats.pondok.pending} menunggu persetujuan`}
-          icon={<Building2 className="h-4 w-4" />}
-        />
-        <DataCard
-          title="RAB"
-          value={`${stats.rab.approved}/${stats.rab.total}`}
-          description={`${stats.rab.pending} menunggu, ${stats.rab.revision} perlu revisi`}
-          icon={<FileText className="h-4 w-4" />}
-        />
-        <DataCard
-          title="LPJ"
-          value={`${stats.lpj.approved}/${stats.lpj.total}`}
-          description={`${stats.lpj.pending} menunggu, ${stats.lpj.revision} perlu revisi`}
-          icon={<FileText className="h-4 w-4" />}
-        />
-        <DataCard
-          title="Total Anggaran"
-          value={stats.totalBudget}
-          description="Periode Juni 2023"
-        />
-      </div>
-      
-      {/* Pending Approvals */}
-      <div className="mb-6">
-        <Tabs defaultValue="pondok" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="pondok">Persetujuan Pondok</TabsTrigger>
-            <TabsTrigger value="rab">Persetujuan RAB</TabsTrigger>
-            <TabsTrigger value="lpj">Persetujuan LPJ</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="pondok">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Pondok Menunggu Persetujuan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {pendingPondok.length > 0 ? (
-                    pendingPondok.map((pondok, index) => (
-                      <motion.div 
-                        key={pondok.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center justify-between p-4 rounded-md bg-muted/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{pondok.name}</p>
-                            <p className="text-xs text-muted-foreground">{pondok.location}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-sm text-muted-foreground">{pondok.date}</span>
-                          <Link to={`/yayasan/pondok/detail/${pondok.id}`}>
-                            <Button size="sm" variant="outline">
-                              Review
-                            </Button>
-                          </Link>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-muted-foreground">Tidak ada pondok yang menunggu persetujuan</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="rab">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">RAB Menunggu Persetujuan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {pendingRab.length > 0 ? (
-                    pendingRab.map((rab, index) => (
-                      <motion.div 
-                        key={rab.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center justify-between p-4 rounded-md bg-muted/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{rab.pondok}</p>
-                            <p className="text-xs text-muted-foreground">{rab.amount}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-sm text-muted-foreground">{rab.date}</span>
-                          <Link to={`/yayasan/rab/review/${rab.id}`}>
-                            <Button size="sm" variant="outline">
-                              Review
-                            </Button>
-                          </Link>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-muted-foreground">Tidak ada RAB yang menunggu persetujuan</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="lpj">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">LPJ Menunggu Persetujuan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {pendingLpj.length > 0 ? (
-                    pendingLpj.map((lpj, index) => (
-                      <motion.div 
-                        key={lpj.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center justify-between p-4 rounded-md bg-muted/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{lpj.pondok}</p>
-                            <p className="text-xs text-muted-foreground">{lpj.amount}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-sm text-muted-foreground">{lpj.date}</span>
-                          <Link to={`/yayasan/lpj/review/${lpj.id}`}>
-                            <Button size="sm" variant="outline">
-                              Review
-                            </Button>
-                          </Link>
-                        </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-muted-foreground">Tidak ada LPJ yang menunggu persetujuan</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-      
-      {/* Recent Activity */}
-      <div className="mb-6">
+    <div className="space-y-6">
+      <PageHeader
+        title="Dashboard Yayasan"
+        description="Pantau dan kelola semua Pondok dalam naungan Yayasan"
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Aktivitas Terbaru</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pondok</CardTitle>
+            <Home className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="relative pl-6 border-l border-muted space-y-6 py-2">
-              <div className="relative">
-                <div className="absolute -left-[27px] p-1 bg-green-100 rounded-full border-4 border-background">
-                  <CheckCircle className="h-3 w-3 text-green-500" />
-                </div>
-                <div>
-                  <p className="font-medium">LPJ Pondok Al-Hidayah disetujui</p>
-                  <p className="text-xs text-muted-foreground">2 jam yang lalu</p>
-                </div>
+            <div className="text-2xl font-bold">{pendingPondoks?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {pendingPondoks?.filter(p => p.status_acc).length || 0} Aktif
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Persetujuan Pondok</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingPondoks?.filter(p => !p.status_acc).length || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Menunggu persetujuan
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">RAB Baru</CardTitle>
+            <FileText className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingRABs?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Menunggu persetujuan
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">LPJ Baru</CardTitle>
+            <FileBarChart className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingLPJs?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Menunggu persetujuan
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Pending Pondok Approvals */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Persetujuan Pondok</CardTitle>
+            <CardDescription>
+              Pondok yang menunggu persetujuan untuk diaktifkan
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isPondoksLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <div className="relative">
-                <div className="absolute -left-[27px] p-1 bg-amber-100 rounded-full border-4 border-background">
-                  <Clock className="h-3 w-3 text-amber-500" />
-                </div>
-                <div>
-                  <p className="font-medium">RAB Pondok Al-Hikmah diajukan</p>
-                  <p className="text-xs text-muted-foreground">5 jam yang lalu</p>
-                </div>
+            ) : pendingPondoks?.filter(p => !p.status_acc).length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                Tidak ada Pondok yang menunggu persetujuan
               </div>
-              <div className="relative">
-                <div className="absolute -left-[27px] p-1 bg-red-100 rounded-full border-4 border-background">
-                  <AlertTriangle className="h-3 w-3 text-red-500" />
-                </div>
-                <div>
-                  <p className="font-medium">RAB Pondok Miftahul Jannah perlu revisi</p>
-                  <p className="text-xs text-muted-foreground">1 hari yang lalu</p>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingPondoks?.filter(p => !p.status_acc).map((pondok) => (
+                  <div key={pondok.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h4 className="font-medium">{pondok.nama}</h4>
+                      <p className="text-sm text-muted-foreground">{pondok.alamat}, {pondok.kota}</p>
+                    </div>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleApprovePondok(pondok.id)}
+                      disabled={approvePondokMutation.isPending}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Setujui
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <div className="relative">
-                <div className="absolute -left-[27px] p-1 bg-blue-100 rounded-full border-4 border-background">
-                  <Building2 className="h-3 w-3 text-blue-500" />
-                </div>
-                <div>
-                  <p className="font-medium">Pondok Daarul Qur'an mendaftar</p>
-                  <p className="text-xs text-muted-foreground">2 hari yang lalu</p>
-                </div>
+            )}
+            <div className="mt-4">
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to="/yayasan/pondok">Lihat Semua Pondok</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent RAB Submissions */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>RAB Terbaru</CardTitle>
+            <CardDescription>
+              RAB yang baru diajukan oleh Pondok
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isRABsLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
+            ) : pendingRABs?.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                Tidak ada RAB yang baru diajukan
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingRABs?.map((rab: any) => (
+                  <div key={rab.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h4 className="font-medium">{rab.pondok?.nama || 'Unknown Pondok'}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Periode: {rab.periode_id.substring(0, 4)}/{rab.periode_id.substring(4, 6)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Diajukan: {formatDate(rab.submit_at)}
+                      </p>
+                    </div>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/yayasan/rab/${rab.id}`}>Detail</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4">
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to="/yayasan/rab">Lihat Semua RAB</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent LPJ Submissions */}
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>LPJ Terbaru</CardTitle>
+            <CardDescription>
+              LPJ yang baru diajukan oleh Pondok
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLPJsLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : pendingLPJs?.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                Tidak ada LPJ yang baru diajukan
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pendingLPJs?.map((lpj: any) => (
+                  <div key={lpj.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h4 className="font-medium">{lpj.pondok?.nama || 'Unknown Pondok'}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Periode: {lpj.periode_id.substring(0, 4)}/{lpj.periode_id.substring(4, 6)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Diajukan: {formatDate(lpj.submit_at)}
+                      </p>
+                    </div>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/yayasan/lpj/${lpj.id}`}>Detail</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4">
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to="/yayasan/lpj">Lihat Semua LPJ</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
