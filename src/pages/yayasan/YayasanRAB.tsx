@@ -16,14 +16,14 @@ import { Search } from 'lucide-react';
 const YayasanRAB = () => {
   const [activeTab, setActiveTab] = useState('diajukan');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPondok, setSelectedPondok] = useState('');
+  const [selectedPondok, setSelectedPondok] = useState('all');
   
   const { data: rabs, isLoading } = useGetAllRABs(activeTab);
   const { data: pondoks } = useGetAllPondoks();
   
   // Filter RABs based on search term and selected pondok
   const filteredRABs = rabs?.filter(rab => {
-    const pondokMatch = selectedPondok ? (rab.pondok_id === selectedPondok) : true;
+    const pondokMatch = selectedPondok === 'all' ? true : (rab.pondok_id === selectedPondok);
     const searchMatch = searchTerm 
       ? (rab.pondok?.nama?.toLowerCase().includes(searchTerm.toLowerCase()) ||
          rab.periode_id.includes(searchTerm))
@@ -78,7 +78,7 @@ const YayasanRAB = () => {
                 <SelectValue placeholder="Filter berdasarkan Pondok" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Semua Pondok</SelectItem>
+                <SelectItem value="all">Semua Pondok</SelectItem>
                 {pondoks?.map((pondok) => (
                   <SelectItem key={pondok.id} value={pondok.id}>
                     {pondok.nama}
