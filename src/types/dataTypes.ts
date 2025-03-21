@@ -1,3 +1,4 @@
+
 export type UserRole = "Admin Yayasan" | "Admin Pondok" | string;
 
 export type User = {
@@ -49,6 +50,7 @@ export type RAB = {
   pesan_revisi: string | null;
   rabPemasukan: RABPemasukan[];
   rabPengeluaran: RABPengeluaran[];
+  pondok?: Pondok; // Adding the optional pondok relation
 };
 
 export type LPJ = {
@@ -61,6 +63,7 @@ export type LPJ = {
   pesan_revisi: string | null;
   lpjPemasukan: LPJPemasukan[];
   lpjPengeluaran: LPJPengeluaran[];
+  pondok?: Pondok; // Adding the optional pondok relation
 };
 
 export type RABPemasukan = {
