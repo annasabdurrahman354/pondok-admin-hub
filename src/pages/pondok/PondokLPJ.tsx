@@ -14,6 +14,8 @@ import { LPJPemasukan, LPJPengeluaran } from '@/types/dataTypes';
 import { fetchLPJPeriode, fetchRABDetail } from '@/services/apiService';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 
 const PondokLPJ = () => {
   const navigate = useNavigate();
@@ -42,13 +44,9 @@ const PondokLPJ = () => {
           setCurrentPeriodeId(periode.id);
           
           // Find the corresponding RAB for this period to use its data
-          // We need to get the RAB with the same period to pre-fill the LPJ form
           const previousPeriodeId = calculatePreviousPeriode(periode.id);
           if (previousPeriodeId && user?.pondok_id) {
-            // Find RAB for the previous period because LPJ is for the previous period
-            // This is a simplified approach - you might want to fetch from the API instead
-            // For this example, we'll just set some dummy RAB data
-            await fetchPreviousRAB(previousPeriodeId, user.pondok_id);
+            await fetchPreviousRABData(previousPeriodeId, user.pondok_id);
           }
         }
       } catch (error) {
@@ -81,44 +79,65 @@ const PondokLPJ = () => {
     return `${prevYear}${prevMonth.toString().padStart(2, '0')}`;
   };
   
-  const fetchPreviousRAB = async (periodeId: string, pondokId: string) => {
+  const fetchPreviousRABData = async (periodeId: string, pondokId: string) => {
     try {
-      // First, we would get the RAB for the previous period
-      // This is simplified for this example
-      // In a real app, you'd query the database for the RAB with this period
-      const dummyRabItems = [
-        { nama: 'Shodaqoh', rencana: 5000000 },
-        { nama: 'Uang Sewa Santri', rencana: 15000000 },
-      ];
+      setIsLoading(true);
+      // Try to get the RAB data from API for the previous period
+      // This is where we'll load real data from the previous RAB if it exists
       
-      const dummyPengeluaranItems = [
-        { nama: 'Kebutuhan Dapur', rencana: 8000000 },
-        { nama: 'Listrik dan Air', rencana: 3000000 },
-        { nama: 'Gaji Pengajar', rencana: 7500000 },
-      ];
+      // First, let's try to find any RAB from the specified period
+      const rabResponse = await fetch(`/api/rab?period=${periodeId}&pondok=${pondokId}`);
       
-      // Initialize LPJ items based on the RAB data
-      const lpjPemasukan = dummyRabItems.map(item => ({
-        id: `temp-${Math.random().toString(36).substr(2, 9)}`,
-        lpj_id: 'temp',
-        nama: item.nama,
-        rencana: item.rencana,
-        realisasi: item.rencana // Default to the planned amount, user will edit
-      }));
+      if (rabResponse.ok) {
+        const rabData = await rabResponse.json();
+        
+        if (rabData && rabData.id) {
+          // We found a RAB, now get its details
+          const rabDetail = await fetchRABDetail(rabData.id);
+          
+          if (rabDetail) {
+            setRabId(rabDetail.rab.id);
+            
+            // Map RAB pemasukan to LPJ pemasukan format
+            const lpjPemasukan = rabDetail.pemasukan.map(item => ({
+              id: `temp-${Math.random().toString(36).substr(2, 9)}`,
+              lpj_id: 'temp',
+              nama: item.nama,
+              rencana: item.nominal,
+              realisasi: item.nominal // Default to the planned amount, user will edit
+            }));
+            
+            // Map RAB pengeluaran to LPJ pengeluaran format
+            const lpjPengeluaran = rabDetail.pengeluaran.map(item => ({
+              id: `temp-${Math.random().toString(36).substr(2, 9)}`,
+              lpj_id: 'temp',
+              nama: item.nama,
+              rencana: item.nominal,
+              realisasi: item.nominal // Default to the planned amount, user will edit
+            }));
+            
+            setPemasukan(lpjPemasukan);
+            setPengeluaran(lpjPengeluaran);
+            return;
+          }
+        }
+      }
       
-      const lpjPengeluaran = dummyPengeluaranItems.map(item => ({
-        id: `temp-${Math.random().toString(36).substr(2, 9)}`,
-        lpj_id: 'temp',
-        nama: item.nama,
-        rencana: item.rencana,
-        realisasi: item.rencana // Default to the planned amount, user will edit
-      }));
+      // If we're here, it means we couldn't find a RAB or get its details
+      // Let's set up some default empty items or sample data
+      toast.info('Tidak ditemukan RAB dari periode sebelumnya. Anda dapat menambahkan item secara manual.');
+      setPemasukan([]);
+      setPengeluaran([]);
       
-      setPemasukan(lpjPemasukan);
-      setPengeluaran(lpjPengeluaran);
     } catch (error) {
-      console.error('Failed to fetch previous RAB:', error);
-      toast.error('Gagal mengambil data RAB sebelumnya');
+      console.error('Failed to fetch previous RAB data:', error);
+      toast.error('Gagal mengambil data RAB periode sebelumnya');
+      
+      // Set default empty arrays
+      setPemasukan([]);
+      setPengeluaran([]);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -132,6 +151,56 @@ const PondokLPJ = () => {
     } else {
       setPengeluaran(pengeluaran.map(item => 
         item.id === id ? { ...item, realisasi: numValue } : item
+      ));
+    }
+  };
+  
+  const handleAddItem = (type: 'pemasukan' | 'pengeluaran') => {
+    const newItem = {
+      id: `temp-${Math.random().toString(36).substr(2, 9)}`,
+      lpj_id: 'temp',
+      nama: '',
+      rencana: 0,
+      realisasi: 0
+    };
+    
+    if (type === 'pemasukan') {
+      setPemasukan([...pemasukan, newItem]);
+    } else {
+      setPengeluaran([...pengeluaran, newItem]);
+    }
+  };
+  
+  const handleRemoveItem = (id: string, type: 'pemasukan' | 'pengeluaran') => {
+    if (type === 'pemasukan') {
+      setPemasukan(pemasukan.filter(item => item.id !== id));
+    } else {
+      setPengeluaran(pengeluaran.filter(item => item.id !== id));
+    }
+  };
+  
+  const handleChangeName = (id: string, type: 'pemasukan' | 'pengeluaran', value: string) => {
+    if (type === 'pemasukan') {
+      setPemasukan(pemasukan.map(item => 
+        item.id === id ? { ...item, nama: value } : item
+      ));
+    } else {
+      setPengeluaran(pengeluaran.map(item => 
+        item.id === id ? { ...item, nama: value } : item
+      ));
+    }
+  };
+  
+  const handleChangeRencana = (id: string, type: 'pemasukan' | 'pengeluaran', value: string) => {
+    const numValue = parseFloat(value) || 0;
+    
+    if (type === 'pemasukan') {
+      setPemasukan(pemasukan.map(item => 
+        item.id === id ? { ...item, rencana: numValue } : item
+      ));
+    } else {
+      setPengeluaran(pengeluaran.map(item => 
+        item.id === id ? { ...item, rencana: numValue } : item
       ));
     }
   };
@@ -155,6 +224,15 @@ const PondokLPJ = () => {
     
     if (pemasukan.length === 0 || pengeluaran.length === 0) {
       toast.error('LPJ harus memiliki minimal 1 pemasukan dan 1 pengeluaran');
+      return;
+    }
+    
+    // Validate that all items have names
+    const emptyPemasukan = pemasukan.find(item => !item.nama.trim());
+    const emptyPengeluaran = pengeluaran.find(item => !item.nama.trim());
+    
+    if (emptyPemasukan || emptyPengeluaran) {
+      toast.error('Semua item harus memiliki nama');
       return;
     }
     
@@ -279,6 +357,11 @@ const PondokLPJ = () => {
             </TabsList>
             
             <TabsContent value="pemasukan" className="space-y-4">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => handleAddItem('pemasukan')} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" /> Tambah Pemasukan
+                </Button>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -287,12 +370,13 @@ const PondokLPJ = () => {
                     <TableHead className="text-right">Rencana</TableHead>
                     <TableHead className="text-right">Realisasi</TableHead>
                     <TableHead className="text-right">Persentase</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {pemasukan.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
                         Belum ada data pemasukan
                       </TableCell>
                     </TableRow>
@@ -300,8 +384,21 @@ const PondokLPJ = () => {
                     pemasukan.map((item, index) => (
                       <TableRow key={item.id}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{item.nama}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.rencana)}</TableCell>
+                        <TableCell>
+                          <Input 
+                            value={item.nama}
+                            onChange={(e) => handleChangeName(item.id, 'pemasukan', e.target.value)}
+                            className="w-full"
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Input 
+                            type="number"
+                            value={item.rencana}
+                            onChange={(e) => handleChangeRencana(item.id, 'pemasukan', e.target.value)}
+                            className="w-32 text-right ml-auto"
+                          />
+                        </TableCell>
                         <TableCell className="text-right">
                           <Input 
                             type="number"
@@ -313,6 +410,11 @@ const PondokLPJ = () => {
                         <TableCell className="text-right">
                           {getPersentase(item.realisasi, item.rencana)}
                         </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id, 'pemasukan')}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -322,6 +424,7 @@ const PondokLPJ = () => {
                       <TableCell className="text-right font-bold">{formatCurrency(totalRencanaPemasukan)}</TableCell>
                       <TableCell className="text-right font-bold">{formatCurrency(totalRealisasiPemasukan)}</TableCell>
                       <TableCell className="text-right font-bold">{getPersentase(totalRealisasiPemasukan, totalRencanaPemasukan)}</TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -329,6 +432,11 @@ const PondokLPJ = () => {
             </TabsContent>
             
             <TabsContent value="pengeluaran" className="space-y-4">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => handleAddItem('pengeluaran')} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" /> Tambah Pengeluaran
+                </Button>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -337,12 +445,13 @@ const PondokLPJ = () => {
                     <TableHead className="text-right">Rencana</TableHead>
                     <TableHead className="text-right">Realisasi</TableHead>
                     <TableHead className="text-right">Persentase</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {pengeluaran.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
                         Belum ada data pengeluaran
                       </TableCell>
                     </TableRow>
@@ -350,8 +459,21 @@ const PondokLPJ = () => {
                     pengeluaran.map((item, index) => (
                       <TableRow key={item.id}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{item.nama}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.rencana)}</TableCell>
+                        <TableCell>
+                          <Input 
+                            value={item.nama}
+                            onChange={(e) => handleChangeName(item.id, 'pengeluaran', e.target.value)}
+                            className="w-full"
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Input 
+                            type="number"
+                            value={item.rencana}
+                            onChange={(e) => handleChangeRencana(item.id, 'pengeluaran', e.target.value)}
+                            className="w-32 text-right ml-auto"
+                          />
+                        </TableCell>
                         <TableCell className="text-right">
                           <Input 
                             type="number"
@@ -363,6 +485,11 @@ const PondokLPJ = () => {
                         <TableCell className="text-right">
                           {getPersentase(item.realisasi, item.rencana)}
                         </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id, 'pengeluaran')}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -372,6 +499,7 @@ const PondokLPJ = () => {
                       <TableCell className="text-right font-bold">{formatCurrency(totalRencanaPengeluaran)}</TableCell>
                       <TableCell className="text-right font-bold">{formatCurrency(totalRealisasiPengeluaran)}</TableCell>
                       <TableCell className="text-right font-bold">{getPersentase(totalRealisasiPengeluaran, totalRencanaPengeluaran)}</TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   )}
                 </TableBody>
