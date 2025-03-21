@@ -25,6 +25,21 @@ export const fetchUserProfile = async (userId: string) => {
   }
 };
 
+export const fetchAllUserProfie = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profile')
+      .select('*');
+    
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching user data:', error);
+    toast.error('Gagal mengambil data user');
+    return null;
+  }
+}
+
 // Periode API functions
 export const fetchPeriodes = async (): Promise<PeriodeType[]> => {
   try {

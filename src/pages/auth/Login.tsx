@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import {
   Card,
   CardContent,
@@ -14,29 +13,14 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useSession } from '@/context/SessionContext';
+import { supabase } from '@/lib/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isLoading, user } = useAuth();
-  const navigate = useNavigate();
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'Admin Yayasan') {
-        navigate('/yayasan/dashboard', { replace: true });
-      } else if (user.role === 'Admin Pondok') {
-        if (!user.pondokId) {
-          navigate('/pondok/sync', { replace: true });
-        } else {
-          navigate('/pondok/dashboard', { replace: true });
-        }
-      }
-    }
-  }, [user, navigate]);
+  const { login } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,9 +99,8 @@ const Login = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
               >
-                {isLoading ? 'Logging in...' : 'Login'}
+                Login
               </Button>
             </CardFooter>
           </form>

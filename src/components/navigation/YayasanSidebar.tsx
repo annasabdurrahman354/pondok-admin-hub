@@ -1,7 +1,4 @@
-
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +22,10 @@ import {
   LogOut,
   Settings,
 } from 'lucide-react';
+import { useSession } from '@/context/SessionContext';
 
 const YayasanSidebar = () => {
-  const { logout } = useAuth();
+  const { logout } = useSession();
   const location = useLocation();
 
   const mainMenuItems = [

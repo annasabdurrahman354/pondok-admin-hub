@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
 import PondokLayout from "@/components/layouts/PondokLayout";
 import YayasanLayout from "@/components/layouts/YayasanLayout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -36,8 +35,16 @@ import LpjDetail from "@/pages/yayasan/LpjDetail";
 
 // Shared
 import NotFound from "./pages/NotFound";
+import { SessionProvider } from "./context/SessionContext";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -45,7 +52,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
+        <SessionProvider>
           <Routes>
             {/* Redirect root to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
@@ -88,7 +95,7 @@ const App = () => (
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
+        </SessionProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,33 +1,20 @@
-
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataCard } from '@/components/ui/data-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
-import { usePondokData } from '@/hooks/usePondokData';
 import { formatCurrency, formatDate } from '@/services/formatUtils';
 import RABItem from '@/components/pondok/RABItem';
 import LPJItem from '@/components/pondok/LPJItem';
 import EmptyState from '@/components/pondok/EmptyState';
 import ApprovalAlert from '@/components/pondok/ApprovalAlert';
+import { useGetPondok, useGetRABs, useGetLPJs, useGetRABDetail, useGetLPJDetail } from '@/hooks/use-pondok-data';
 
 const PondokDashboard: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { 
-    useGetPondok, 
-    useGetRABs, 
-    useGetLPJs, 
-    useGetRABDetail, 
-    useGetLPJDetail 
-  } = usePondokData();
-  
   // Fetch pondok data
   const { 
-    data: pondokData, 
+    data: pondok, 
     isLoading: isPondokLoading 
   } = useGetPondok();
   
@@ -87,11 +74,11 @@ const PondokDashboard: React.FC = () => {
     <div>
       <PageHeader
         title={`Selamat Datang, Admin Pondok`}
-        description={pondokData?.pondok?.nama || 'Pondok Admin Dashboard'}
+        description={pondok?.nama || 'Pondok Admin Dashboard'}
       />
       
       {/* Pending approval alert */}
-      {pondokData?.pondok && !pondokData.pondok.status_acc && <ApprovalAlert />}
+      {pondok && !pondok.status_acc && <ApprovalAlert />}
       
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

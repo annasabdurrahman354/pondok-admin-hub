@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FileText, BarChart3, Plus, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';

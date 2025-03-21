@@ -1,6 +1,4 @@
-
-import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useState } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataCard } from '@/components/ui/data-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,12 +11,11 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, FileText, ArrowUpRight, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { Building2, FileText, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const YayasanDashboard = () => {
-  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState('202306');
 
   // Mock data for demonstration

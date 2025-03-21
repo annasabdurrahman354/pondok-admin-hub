@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -18,8 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/client';
+import { useSession } from '@/context/SessionContext';
 
 // Form schemas
 const pondokSchema = z.object({
@@ -46,7 +45,7 @@ type PengurusFormValues = z.infer<typeof pengurusSchema>;
 
 const PondokSync = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useSession();
   const [step, setStep] = useState<'pondok' | 'pengurus'>('pondok');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -162,7 +161,7 @@ const PondokSync = () => {
     if (step === 'pengurus') {
       setStep('pondok');
     } else {
-      navigate('/login');
+      logout();
     }
   };
 
@@ -314,8 +313,8 @@ const PondokSync = () => {
                 variant="outline"
                 onClick={goBack}
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Kembali
+              <ArrowLeft className="mr-2 h-4 w-4" />
+                {step === 'pengurus' ? 'Kembali' : 'Keluar'}
               </Button>
               <Button type="submit">
                 Lanjut

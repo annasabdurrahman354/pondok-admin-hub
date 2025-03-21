@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LPJ } from '@/types/dataTypes';
 import { Button } from '@/components/ui/button';
