@@ -18,6 +18,8 @@ import PondokRAB from "@/pages/pondok/PondokRAB";
 import PondokLPJ from "@/pages/pondok/PondokLPJ";
 import PondokSettings from "@/pages/pondok/PondokSettings";
 import PondokCreate from "@/pages/pondok/PondokCreate";
+import PondokRABList from "@/pages/pondok/PondokRABList";
+import PondokLPJList from "@/pages/pondok/PondokLPJList";
 
 // Yayasan Pages
 import YayasanDashboard from "@/pages/yayasan/YayasanDashboard";
@@ -66,8 +68,9 @@ const App = () => (
                 <Route path="dashboard" element={<PondokDashboard />} />
                 <Route path="rab" element={<PondokRAB />} />
                 <Route path="lpj" element={<PondokLPJ />} />
+                <Route path="rab-list" element={<PondokRABList />} />
+                <Route path="lpj-list" element={<PondokLPJList />} />
                 <Route path="settings" element={<PondokSettings />} />
-                <Route path="create" element={<PondokCreate />} />
               </Route>
             </Route>
             

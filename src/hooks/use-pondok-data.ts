@@ -136,7 +136,7 @@ export const useRABMutations = () => {
 
   const createRABMutation = useMutation({
     mutationFn: (data: { periodeId: string; pemasukan: Omit<RABPemasukan, 'id' | 'rab_id'>[]; pengeluaran: Omit<RABPengeluaran, 'id' | 'rab_id'>[] }) => 
-      createRAB(pondokId!, data.periodeId, data.pemasukan, data.pengeluaran),
+      createRAB(pondokId!, data.periodeId, data.pemasukan as any, data.pengeluaran as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rabs', { pondokId }] });
     },
@@ -181,7 +181,7 @@ export const useLPJMutations = () => {
 
   const createLPJMutation = useMutation({
     mutationFn: (data: { periodeId: string; pemasukan: Omit<LPJPemasukan, 'id' | 'lpj_id'>[]; pengeluaran: Omit<LPJPengeluaran, 'id' | 'lpj_id'>[] }) => 
-      createLPJ(pondokId!, data.periodeId, data.pemasukan, data.pengeluaran),
+      createLPJ(pondokId!, data.periodeId, data.pemasukan as any, data.pengeluaran as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lpjs', { pondokId }] });
     },
