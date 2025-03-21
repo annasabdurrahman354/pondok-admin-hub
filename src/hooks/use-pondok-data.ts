@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   fetchPondokWithPengurus,
@@ -21,7 +20,7 @@ import {
   fetchUserProfile,
   fetchPondokData
 } from '@/services/apiService';
-import { Pondok, PengurusPondok, RAB, LPJ, RABPemasukan, RABPengeluaran, LPJPemasukan, LPJPengeluaran } from '@/types/dataTypes';
+import { Pondok, PengurusPondok, RAB, LPJ, RABPemasukan, RABPengeluaran, LPJPemasukan, LPJPengeluaran, RABDetailResponse, LPJDetailResponse } from '@/types/dataTypes';
 import { useSession } from '@/context/SessionContext';
 
 // Pondok Queries
@@ -70,7 +69,7 @@ export const useGetRABs = (limit = 10) => {
 };
 
 export const useGetRABDetail = (rabId: string) => {
-  return useQuery({
+  return useQuery<RABDetailResponse>({
     queryKey: ['rab', { id: rabId }],
     queryFn: () => fetchRABDetail(rabId),
     enabled: !!rabId,
@@ -88,7 +87,7 @@ export const useGetLPJs = (limit = 10) => {
 };
 
 export const useGetLPJDetail = (lpjId: string) => {
-  return useQuery({
+  return useQuery<LPJDetailResponse>({
     queryKey: ['lpj', { id: lpjId }],
     queryFn: () => fetchLPJDetail(lpjId),
     enabled: !!lpjId,

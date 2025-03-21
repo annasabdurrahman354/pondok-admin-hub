@@ -102,3 +102,16 @@ export type Periode = {
   id: string;  // Format YYYYMM
   tahap: "RAB" | "LPJ" | string;
 };
+
+// Add these types for API responses
+export type RABDetailResponse = {
+  rab: RAB;
+  pemasukan: RABPemasukan[];
+  pengeluaran: RABPengeluaran[];
+};
+
+export type LPJDetailResponse = {
+  lpj: LPJ;
+  pemasukan: LPJPemasukan[];
+  pengeluaran: LPJPengeluaran[];
+};

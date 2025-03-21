@@ -332,12 +332,12 @@ export const fetchRABs = async (pondokId: string, limit = 10): Promise<RAB[]> =>
   }
 };
 
-export const fetchRABDetail = async (rabId: string): Promise<RAB | null> => {
+export const fetchRABDetail = async (rabId: string): Promise<RABDetailResponse | null> => {
   try {
     // Fetch RAB data
     const { data: rab, error: rabError } = await supabase
       .from('rab')
-      .select('*')
+      .select('*, pondok(*)')
       .eq('id', rabId)
       .single();
     
@@ -360,9 +360,13 @@ export const fetchRABDetail = async (rabId: string): Promise<RAB | null> => {
     if (pengeluaranError) throw pengeluaranError;
     
     return {
-      ...rab,
-      rabPemasukan: pemasukan || [],
-      rabPengeluaran: pengeluaran || []
+      rab: {
+        ...rab,
+        rabPemasukan: pemasukan || [],
+        rabPengeluaran: pengeluaran || []
+      },
+      pemasukan: pemasukan || [],
+      pengeluaran: pengeluaran || []
     };
   } catch (error: any) {
     console.error('Error fetching RAB detail:', error);
@@ -607,12 +611,12 @@ export const fetchLPJs = async (pondokId: string, limit = 10): Promise<LPJ[]> =>
   }
 };
 
-export const fetchLPJDetail = async (lpjId: string): Promise<LPJ | null> => {
+export const fetchLPJDetail = async (lpjId: string): Promise<LPJDetailResponse | null> => {
   try {
     // Fetch LPJ data
     const { data: lpj, error: lpjError } = await supabase
       .from('lpj')
-      .select('*')
+      .select('*, pondok(*)')
       .eq('id', lpjId)
       .single();
     
@@ -635,9 +639,13 @@ export const fetchLPJDetail = async (lpjId: string): Promise<LPJ | null> => {
     if (pengeluaranError) throw pengeluaranError;
     
     return {
-      ...lpj,
-      lpjPemasukan: pemasukan || [],
-      lpjPengeluaran: pengeluaran || []
+      lpj: {
+        ...lpj,
+        lpjPemasukan: pemasukan || [],
+        lpjPengeluaran: pengeluaran || []
+      },
+      pemasukan: pemasukan || [],
+      pengeluaran: pengeluaran || []
     };
   } catch (error: any) {
     console.error('Error fetching LPJ detail:', error);
@@ -1037,3 +1045,4 @@ export const requestLPJRevision = async (lpjId: string, message: string): Promis
     return false;
   }
 };
+

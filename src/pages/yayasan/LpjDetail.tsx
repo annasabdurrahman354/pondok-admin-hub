@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
@@ -12,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, XCircle, ArrowLeft, FileText } from 'lucide-react';
 import { useGetLPJDetail, useYayasanMutations } from '@/hooks/use-yayasan-data';
 import { formatCurrency, formatDate } from '@/services/formatUtils';
+import { LPJDetailResponse } from '@/types/dataTypes';
 
 const LpjDetail = () => {
   const { lpjId } = useParams<{ lpjId: string }>();
@@ -47,7 +47,7 @@ const LpjDetail = () => {
     );
   }
   
-  const { lpj, pemasukan, pengeluaran } = lpjDetail;
+  const { lpj, pemasukan, pengeluaran } = lpjDetail as LPJDetailResponse;
   
   const handleApproveLPJ = () => {
     approveLPJMutation.mutate(lpj.id, {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
@@ -12,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, XCircle, ArrowLeft } from 'lucide-react';
 import { useGetRABDetail, useYayasanMutations } from '@/hooks/use-yayasan-data';
 import { formatCurrency, formatDate } from '@/services/formatUtils';
+import { RABDetailResponse } from '@/types/dataTypes';
 
 const RabDetail = () => {
   const { rabId } = useParams<{ rabId: string }>();
@@ -47,7 +47,7 @@ const RabDetail = () => {
     );
   }
   
-  const { rab, pemasukan, pengeluaran } = rabDetail;
+  const { rab, pemasukan, pengeluaran } = rabDetail as RABDetailResponse;
   
   const handleApproveRAB = () => {
     approveRABMutation.mutate(rab.id, {

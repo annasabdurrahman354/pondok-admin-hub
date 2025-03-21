@@ -13,7 +13,7 @@ import {
   fetchRABDetail,
   fetchLPJDetail
 } from '@/services/apiService';
-import { RAB, LPJ, Pondok } from '@/types/dataTypes';
+import { RAB, LPJ, Pondok, RABDetailResponse, LPJDetailResponse } from '@/types/dataTypes';
 
 // Pondok Queries
 export const useGetAllPondoks = () => {
@@ -39,7 +39,7 @@ export const useGetAllRABs = (status?: string, periodeId?: string, limit = 100) 
 };
 
 export const useGetRABDetail = (rabId: string) => {
-  return useQuery({
+  return useQuery<RABDetailResponse>({
     queryKey: ['rab', { id: rabId }],
     queryFn: () => fetchRABDetail(rabId),
     enabled: !!rabId,
@@ -55,7 +55,7 @@ export const useGetAllLPJs = (status?: string, periodeId?: string, limit = 100) 
 };
 
 export const useGetLPJDetail = (lpjId: string) => {
-  return useQuery({
+  return useQuery<LPJDetailResponse>({
     queryKey: ['lpj', { id: lpjId }],
     queryFn: () => fetchLPJDetail(lpjId),
     enabled: !!lpjId,
