@@ -3,12 +3,14 @@ import {
   Pondok, PengurusPondok, RAB, LPJ, 
   RABPemasukan, RABPengeluaran, 
   LPJPemasukan, LPJPengeluaran,
-  PeriodeType
+  Periode,
+  UserProfile,
+  User
 } from '@/types/dataTypes';
 import { toast } from 'sonner';
 
 // Pondok API functions
-export const fetchUserProfile = async (userId: string) => {
+export const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
   try {
     const { data, error } = await supabase
       .from('user_profile')
@@ -25,7 +27,7 @@ export const fetchUserProfile = async (userId: string) => {
   }
 };
 
-export const fetchAllUserProfie = async () => {
+export const fetchAllUserProfie = async (): Promise<UserProfile[]> => {
   try {
     const { data, error } = await supabase
       .from('user_profile')
@@ -41,7 +43,7 @@ export const fetchAllUserProfie = async () => {
 }
 
 // Periode API functions
-export const fetchPeriodes = async (): Promise<PeriodeType[]> => {
+export const fetchPeriodes = async (): Promise<Periode[]> => {
   try {
     const { data, error } = await supabase
       .from('periode')
@@ -57,11 +59,12 @@ export const fetchPeriodes = async (): Promise<PeriodeType[]> => {
   }
 };
 
-export const fetchCurrentPeriode = async (): Promise<PeriodeType | null> => {
+export const fetchLPJPeriode = async (): Promise<Periode | null> => {
   try {
     const { data, error } = await supabase
       .from('periode')
       .select('*')
+      .eq('tahap', 'LPJ')
       .order('id', { ascending: false })
       .limit(1)
       .single();
@@ -69,10 +72,100 @@ export const fetchCurrentPeriode = async (): Promise<PeriodeType | null> => {
     if (error) throw error;
     return data;
   } catch (error: any) {
-    console.error('Error fetching current periode:', error);
+    console.error('Error fetching LPJ periode:', error);
     return null;
   }
 };
+
+export const fetchRABPeriode = async (): Promise<Periode | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('periode')
+      .select('*')
+      .eq('tahap', 'RAB')
+      .order('id', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error fetching RAB periode:', error);
+    return null;
+  }
+};
+
+export const createOrUpdateAuthUserPondokData = async (user: User, pondokData: Partial<Pondok>, pengurusData) => {
+  try {
+    let pondokId = user?.pondok_id;
+    let newPondok: Pondok;
+
+    if (pondokId) {
+      // Update existing pondok
+      const { error: updateError } = await supabase
+        .from('pondok')
+        .update({
+          nama: pondokData.nama,
+          telepon: pondokData.telepon,
+          alamat: pondokData.alamat,
+          provinsi: pondokData.provinsi,
+          kota: pondokData.kota,
+          kecamatan: pondokData.kecamatan,
+          kelurahan: pondokData.kelurahan,
+          kode_pos: pondokData.kode_pos,
+          daerah_sambung: pondokData.daerah_sambung,
+          status_acc: false,
+        })
+        .eq('id', pondokId);
+
+      if (updateError) throw updateError;
+
+      // Delete old pengurus
+      await supabase.from('pengurus_pondok').delete().eq('pondok_id', pondokId);
+    } else {
+      // Insert new pondok
+      const { data, error } = await supabase
+        .from('pondok')
+        .insert({
+          nama: pondokData.nama,
+          telepon: pondokData.telepon,
+          alamat: pondokData.alamat,
+          provinsi: pondokData.provinsi,
+          kota: pondokData.kota,
+          kecamatan: pondokData.kecamatan,
+          kelurahan: pondokData.kelurahan,
+          kode_pos: pondokData.kode_pos,
+          daerah_sambung: pondokData.daerah_sambung,
+          status_acc: false,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      newPondok = data;
+      pondokId = newPondok.id;
+
+      // Update user profile
+      await supabase.from('user_profile').update({ pondok_id: pondokId }).eq('id', user.id);
+    }
+
+    // Insert new pengurus data
+    const pengurusToInsert = [
+      { pondok_id: pondokId, nama: pengurusData.ketua, jabatan: 'Ketua' },
+      { pondok_id: pondokId, nama: pengurusData.bendahara, jabatan: 'Bendahara' },
+      { pondok_id: pondokId, nama: pengurusData.sekretaris, jabatan: 'Sekretaris' },
+      { pondok_id: pondokId, nama: pengurusData.pinisepuh, jabatan: 'Pinisepuh' },
+    ];
+
+    await supabase.from('pengurus_pondok').insert(pengurusToInsert);
+
+    return { success: true, pondokId };
+  } catch (error) {
+    console.error('Error in createOrUpdateAuthUserPondokData:', error);
+    return { success: false, error };
+  }
+};
+
 
 // Pondok API functions
 export const fetchPondokData = async (pondokId: string): Promise<Pondok | null> => {

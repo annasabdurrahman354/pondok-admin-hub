@@ -1,3 +1,13 @@
+export type UserRole = "Admin Yayasan" | "Admin Pondok" | string;
+
+export type User = {
+  id: string;
+  nama: string;
+  nomor_telepon: string;
+  email: string;
+  role: UserRole;
+  pondok_id?: string;
+};
 
 export type Pondok = {
   id: string;
@@ -11,6 +21,15 @@ export type Pondok = {
   kode_pos: string;
   daerah_sambung: string;
   status_acc: boolean;
+};
+
+export type UserProfile = {
+  id: string;
+  nama: string;
+  nomor_telepon: string;
+  pondok_id?: string;
+  created_at: string;
+  role: "Admin Yayasan" | "Admin Pondok" | string;
 };
 
 export type PengurusPondok = {
@@ -76,6 +95,7 @@ export type LPJPengeluaran = {
   realisasi: number;
 };
 
-export type PeriodeType = {
+export type Periode = {
   id: string;  // Format YYYYMM
+  tahap: "RAB" | "LPJ" | string;
 };

@@ -5,17 +5,7 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserProfile, fetchPondokData } from "@/services/apiService";
-
-export type UserRole = "Admin Yayasan" | "Admin Pondok";
-
-type User = {
-  id: string;
-  nama: string;
-  nomor_telepon: string;
-  email: string;
-  role: UserRole;
-  pondokId?: string;
-};
+import { User } from "@/types/dataTypes";
 
 const SessionContext = createContext<{
   session: Session | null;
@@ -47,9 +37,9 @@ export const SessionProvider = ({ children }: Props) => {
   });
 
   const { data: pondokData, isLoading: isPondokLoading } = useQuery({
-    queryKey: ["pondok", userProfile?.pondokId],
-    queryFn: () => (userProfile?.pondokId ? fetchPondokData(userProfile.pondokId) : null),
-    enabled: !!userProfile?.pondokId,
+    queryKey: ["pondok", userProfile?.pondok_id],
+    queryFn: () => (userProfile?.pondok_id ? fetchPondokData(userProfile.pondok_id) : null),
+    enabled: !!userProfile?.pondok_id,
   });
 
   // Handle auth state changes
@@ -81,7 +71,7 @@ export const SessionProvider = ({ children }: Props) => {
         nomor_telepon,
         email: session.user.email || "",
         role,
-        pondokId: pondok_id,
+        pondok_id: pondok_id,
       });
     }
   }, [userProfile, session]);
@@ -96,14 +86,14 @@ export const SessionProvider = ({ children }: Props) => {
           navigate("/yayasan/dashboard");
           hasNavigated.current = true;
         } else if (user.role === "Admin Pondok") {
-          if (!user.pondokId || !pondokData) {
+          if (!user.pondok_id || !pondokData) {
             navigate("/pondok/sync");
           } else {
             navigate("/pondok/dashboard");
           }
           hasNavigated.current = true;
         }
-      } else if (user.role === "Admin Pondok" && !user.pondokId && location.pathname !== "/pondok/sync") {
+      } else if (user.role === "Admin Pondok" && !user.pondok_id && location.pathname !== "/pondok/sync") {
         navigate("/pondok/sync");
         hasNavigated.current = true;
       }

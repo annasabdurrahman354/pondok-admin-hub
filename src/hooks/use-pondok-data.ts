@@ -27,18 +27,18 @@ import { useSession } from '@/context/SessionContext';
 export const useGetPondok = () => {
   const { user } = useSession();
   return useQuery({
-    queryKey: ['pondok', { id: user?.pondokId }],
-    queryFn: () => fetchPondokData(user!.pondokId),
-    enabled: !!user?.pondokId,
+    queryKey: ['pondok', { id: user?.pondok_id }],
+    queryFn: () => fetchPondokData(user!.pondok_id),
+    enabled: !!user?.pondok_id,
   });
 };
 
 export const useGetPondokWithPengurus = () => {
   const { user } = useSession();
   return useQuery({
-    queryKey: ['pondokWithPengurus', { id: user?.pondokId }],
-    queryFn: () => fetchPondokWithPengurus(user!.pondokId),
-    enabled: !!user?.pondokId,
+    queryKey: ['pondokWithPengurus', { id: user?.pondok_id }],
+    queryFn: () => fetchPondokWithPengurus(user!.pondok_id),
+    enabled: !!user?.pondok_id,
   });
 };
 
@@ -62,9 +62,9 @@ export const useGetAllUserProfiles = () => {
 export const useGetRABs = (limit = 10) => {
   const { user } = useSession();
   return useQuery({
-    queryKey: ['rabs', { pondokId: user?.pondokId, limit }],
-    queryFn: () => fetchRABs(user!.pondokId, limit),
-    enabled: !!user?.pondokId,
+    queryKey: ['rabs', { pondokId: user?.pondok_id, limit }],
+    queryFn: () => fetchRABs(user!.pondok_id, limit),
+    enabled: !!user?.pondok_id,
   });
 };
 
@@ -80,9 +80,9 @@ export const useGetRABDetail = (rabId: string) => {
 export const useGetLPJs = (limit = 10) => {
   const { user } = useSession();
   return useQuery({
-    queryKey: ['lpjs', { pondokId: user?.pondokId, limit }],
-    queryFn: () => fetchLPJs(user!.pondokId, limit),
-    enabled: !!user?.pondokId,
+    queryKey: ['lpjs', { pondokId: user?.pondok_id, limit }],
+    queryFn: () => fetchLPJs(user!.pondok_id, limit),
+    enabled: !!user?.pondok_id,
   });
 };
 
@@ -98,7 +98,7 @@ export const useGetLPJDetail = (lpjId: string) => {
 export const usePondokMutations = () => {
   const queryClient = useQueryClient();
   const { user } = useSession();
-  const pondokId = user?.pondokId;
+  const pondokId = user?.pondok_id;
 
   const updatePondok = useMutation({
     mutationFn: (data: Partial<Pondok>) => updatePondokData(data),
@@ -131,7 +131,7 @@ export const usePondokMutations = () => {
 export const useRABMutations = () => {
   const queryClient = useQueryClient();
   const { user } = useSession();
-  const pondokId = user?.pondokId;
+  const pondokId = user?.pondok_id;
 
   const createRAB = useMutation({
     mutationFn: (data: { periodeId: string; pemasukan: RABPemasukan[]; pengeluaran: RABPengeluaran[] }) => 
@@ -157,7 +157,7 @@ export const useRABMutations = () => {
 export const useLPJMutations = () => {
   const queryClient = useQueryClient();
   const { user } = useSession();
-  const pondokId = user?.pondokId;
+  const pondokId = user?.pondok_id;
 
   const createLPJ = useMutation({
     mutationFn: (data: { periodeId: string; pemasukan: LPJPemasukan[]; pengeluaran: LPJPengeluaran[] }) => 

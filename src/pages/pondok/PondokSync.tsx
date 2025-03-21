@@ -19,6 +19,7 @@ import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/client';
 import { useSession } from '@/context/SessionContext';
+import { createOrUpdateAuthUserPondokData } from '@/services/apiService';
 
 // Form schemas
 const pondokSchema = z.object({
@@ -86,76 +87,31 @@ const PondokSync = () => {
       navigate('/login');
       return;
     }
-
+  
     setIsSubmitting(true);
-    
+  
     try {
       // Get previously saved pondok data
       const pondokData = JSON.parse(localStorage.getItem('pondok_form_data') || '{}');
-      
-      // Create new pondok in Supabase
-      const { data: newPondok, error: pondokError } = await supabase
-        .from('pondok')
-        .insert({
-          id: user.pondokId,
-          nama: pondokData.nama,
-          telepon: pondokData.telepon,
-          alamat: pondokData.alamat,
-          provinsi: pondokData.provinsi_id,
-          kota: pondokData.kota_id,
-          kecamatan: pondokData.kecamatan,
-          kelurahan: pondokData.kelurahan,
-          kode_pos: pondokData.kode_pos,
-          daerah_sambung: pondokData.daerah_sambung,
-          status_acc: false // Pending approval
-        })
-        .select()
-        .single();
-      
-      if (pondokError) throw pondokError;
-      
-      // Insert pengurus data
-      const pengurusToInsert = [
-        { 
-          pondok_id: user.pondokId, 
-          nama: data.ketua, 
-          jabatan: 'ketua' as const 
-        },
-        { 
-          pondok_id: user.pondokId, 
-          nama: data.bendahara, 
-          jabatan: 'bendahara' as const 
-        },
-        { 
-          pondok_id: user.pondokId, 
-          nama: data.sekretaris, 
-          jabatan: 'sekretaris' as const 
-        },
-        { 
-          pondok_id: user.pondokId, 
-          nama: data.pinisepuh, 
-          jabatan: 'pinisepuh' as const 
-        }
-      ];
-      
-      const { error: pengurusError } = await supabase
-        .from('pengurus_pondok')
-        .insert(pengurusToInsert);
-      
-      if (pengurusError) throw pengurusError;
-      
+  
+      // Use the function to create or update pondok and pengurus data
+      const response = await createOrUpdateAuthUserPondokData(user, pondokData, data);
+  
+      if (!response.success) throw response.error;
+  
       // Clean up the temporary form data
       localStorage.removeItem('pondok_form_data');
-      
+  
       toast.success('Data pondok telah disimpan dan menunggu persetujuan');
       navigate('/pondok/dashboard');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error submitting pondok data:', error);
       toast.error(error.message || 'Gagal menyimpan data pondok');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   const goBack = () => {
     if (step === 'pengurus') {
