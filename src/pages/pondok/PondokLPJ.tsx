@@ -1,12 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Upload, Save, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, Upload, Save, AlertCircle, Trash2, Edit, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGetLPJs, useLPJMutations } from '@/hooks/use-pondok-data';
 import { useSession } from '@/context/SessionContext';
@@ -16,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { motion } from 'framer-motion';
 
 const PondokLPJ = () => {
   const navigate = useNavigate();
@@ -30,6 +29,7 @@ const PondokLPJ = () => {
   const [pemasukan, setPemasukan] = useState<LPJPemasukan[]>([]);
   const [pengeluaran, setPengeluaran] = useState<LPJPengeluaran[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const { data: lpjs = [], isLoading: isLoadingLpjs } = useGetLPJs();
   const { createLPJMutation } = useLPJMutations();
@@ -276,6 +276,11 @@ const PondokLPJ = () => {
     return `${Math.round((realisasi / rencana) * 100)}%`;
   };
 
+  // Toggle edit mode for an item
+  const toggleEditMode = (id: string | null) => {
+    setEditingId(id);
+  };
+
   // Calculate totals
   const totalRencanaPemasukan = pemasukan.reduce((sum, item) => sum + item.rencana, 0);
   const totalRealisasiPemasukan = pemasukan.reduce((sum, item) => sum + item.realisasi, 0);
@@ -332,6 +337,139 @@ const PondokLPJ = () => {
     );
   }
 
+  // Item Card Component for Pemasukan and Pengeluaran
+  const ItemCard = ({ 
+    item, 
+    index, 
+    type, 
+    onRemove 
+  }: { 
+    item: LPJPemasukan | LPJPengeluaran, 
+    index: number, 
+    type: 'pemasukan' | 'pengeluaran',
+    onRemove: () => void
+  }) => {
+    const isEditing = editingId === item.id;
+    const handleSave = () => toggleEditMode(null);
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        className="mb-3"
+      >
+        <Card className="overflow-hidden">
+          <CardHeader className="p-3 flex flex-row items-center justify-between bg-muted/30">
+            <div className="flex items-center justify-between w-full">
+              {isEditing ? (
+                <Input 
+                  value={item.nama}
+                  onChange={(e) => handleChangeName(item.id, type, e.target.value)}
+                  className="w-full mr-2"
+                  placeholder="Nama item"
+                />
+              ) : (
+                <p className="font-medium truncate">{item.nama || 'Untitled'}</p>
+              )}
+              <div className="flex items-center space-x-1">
+                {isEditing ? (
+                  <Button variant="ghost" size="icon" onClick={handleSave}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="icon" onClick={() => toggleEditMode(item.id)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={onRemove}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Rencana</p>
+                {isEditing ? (
+                  <Input 
+                    type="number"
+                    value={item.rencana}
+                    onChange={(e) => handleChangeRencana(item.id, type, e.target.value)}
+                    className="w-full"
+                  />
+                ) : (
+                  <p className="font-medium">{formatCurrency(item.rencana)}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Realisasi</p>
+                {isEditing ? (
+                  <Input 
+                    type="number"
+                    value={item.realisasi}
+                    onChange={(e) => handleChangeRealisasi(item.id, type, e.target.value)}
+                    className="w-full"
+                  />
+                ) : (
+                  <p className="font-medium">{formatCurrency(item.realisasi)}</p>
+                )}
+              </div>
+            </div>
+            <div className="mt-2">
+              <p className="text-xs text-muted-foreground mb-1">Persentase Realisasi</p>
+              <div className="w-full bg-muted rounded-full h-2.5">
+                <div 
+                  className="bg-primary h-2.5 rounded-full" 
+                  style={{ width: `${Math.min(100, Math.round((item.realisasi / (item.rencana || 1)) * 100))}%` }}
+                />
+              </div>
+              <p className="text-xs mt-1 text-right">{getPersentase(item.realisasi, item.rencana)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+
+  // Summary Card Component
+  const SummaryCard = ({ 
+    title, 
+    rencana, 
+    realisasi 
+  }: { 
+    title: string, 
+    rencana: number, 
+    realisasi: number 
+  }) => (
+    <Card className="mb-4 bg-muted/20">
+      <CardContent className="p-4">
+        <h3 className="font-medium text-lg mb-2">{title}</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Rencana</p>
+            <p className="font-medium">{formatCurrency(rencana)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Realisasi</p>
+            <p className="font-medium">{formatCurrency(realisasi)}</p>
+          </div>
+        </div>
+        <div className="mt-2">
+          <p className="text-xs text-muted-foreground mb-1">Persentase Realisasi</p>
+          <div className="w-full bg-muted rounded-full h-2.5">
+            <div 
+              className="bg-primary h-2.5 rounded-full" 
+              style={{ width: `${Math.min(100, Math.round((realisasi / (rencana || 1)) * 100))}%` }}
+            />
+          </div>
+          <p className="text-xs mt-1 text-right">{getPersentase(realisasi, rencana)}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -349,11 +487,11 @@ const PondokLPJ = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="pemasukan" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="pemasukan">Pemasukan</TabsTrigger>
-              <TabsTrigger value="pengeluaran">Pengeluaran</TabsTrigger>
-              <TabsTrigger value="bukti">Bukti</TabsTrigger>
-              <TabsTrigger value="summary">Ringkasan</TabsTrigger>
+            <TabsList className="mb-4 w-full">
+              <TabsTrigger value="pemasukan" className="flex-1">Pemasukan</TabsTrigger>
+              <TabsTrigger value="pengeluaran" className="flex-1">Pengeluaran</TabsTrigger>
+              <TabsTrigger value="bukti" className="flex-1">Bukti</TabsTrigger>
+              <TabsTrigger value="summary" className="flex-1">Ringkasan</TabsTrigger>
             </TabsList>
             
             <TabsContent value="pemasukan" className="space-y-4">
@@ -362,73 +500,33 @@ const PondokLPJ = () => {
                   <Plus className="h-4 w-4 mr-2" /> Tambah Pemasukan
                 </Button>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>No</TableHead>
-                    <TableHead>Nama Pemasukan</TableHead>
-                    <TableHead className="text-right">Rencana</TableHead>
-                    <TableHead className="text-right">Realisasi</TableHead>
-                    <TableHead className="text-right">Persentase</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pemasukan.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        Belum ada data pemasukan
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    pemasukan.map((item, index) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>
-                          <Input 
-                            value={item.nama}
-                            onChange={(e) => handleChangeName(item.id, 'pemasukan', e.target.value)}
-                            className="w-full"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input 
-                            type="number"
-                            value={item.rencana}
-                            onChange={(e) => handleChangeRencana(item.id, 'pemasukan', e.target.value)}
-                            className="w-32 text-right ml-auto"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input 
-                            type="number"
-                            value={item.realisasi}
-                            onChange={(e) => handleChangeRealisasi(item.id, 'pemasukan', e.target.value)}
-                            className="w-32 text-right ml-auto"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {getPersentase(item.realisasi, item.rencana)}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id, 'pemasukan')}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                  {pemasukan.length > 0 && (
-                    <TableRow className="border-t-2">
-                      <TableCell colSpan={2} className="font-bold">Total Pemasukan</TableCell>
-                      <TableCell className="text-right font-bold">{formatCurrency(totalRencanaPemasukan)}</TableCell>
-                      <TableCell className="text-right font-bold">{formatCurrency(totalRealisasiPemasukan)}</TableCell>
-                      <TableCell className="text-right font-bold">{getPersentase(totalRealisasiPemasukan, totalRencanaPemasukan)}</TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              
+              {pemasukan.length === 0 ? (
+                <div className="text-center p-8 bg-muted/30 rounded-lg">
+                  <p className="text-muted-foreground">Belum ada data pemasukan</p>
+                  <Button onClick={() => handleAddItem('pemasukan')} variant="outline" className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" /> Tambah Item
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {pemasukan.map((item, index) => (
+                    <ItemCard 
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      type="pemasukan"
+                      onRemove={() => handleRemoveItem(item.id, 'pemasukan')}
+                    />
+                  ))}
+                  
+                  <SummaryCard
+                    title="Total Pemasukan"
+                    rencana={totalRencanaPemasukan}
+                    realisasi={totalRealisasiPemasukan}
+                  />
+                </>
+              )}
             </TabsContent>
             
             <TabsContent value="pengeluaran" className="space-y-4">
@@ -437,73 +535,33 @@ const PondokLPJ = () => {
                   <Plus className="h-4 w-4 mr-2" /> Tambah Pengeluaran
                 </Button>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>No</TableHead>
-                    <TableHead>Nama Pengeluaran</TableHead>
-                    <TableHead className="text-right">Rencana</TableHead>
-                    <TableHead className="text-right">Realisasi</TableHead>
-                    <TableHead className="text-right">Persentase</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pengeluaran.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        Belum ada data pengeluaran
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    pengeluaran.map((item, index) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>
-                          <Input 
-                            value={item.nama}
-                            onChange={(e) => handleChangeName(item.id, 'pengeluaran', e.target.value)}
-                            className="w-full"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input 
-                            type="number"
-                            value={item.rencana}
-                            onChange={(e) => handleChangeRencana(item.id, 'pengeluaran', e.target.value)}
-                            className="w-32 text-right ml-auto"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input 
-                            type="number"
-                            value={item.realisasi}
-                            onChange={(e) => handleChangeRealisasi(item.id, 'pengeluaran', e.target.value)}
-                            className="w-32 text-right ml-auto"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {getPersentase(item.realisasi, item.rencana)}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id, 'pengeluaran')}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                  {pengeluaran.length > 0 && (
-                    <TableRow className="border-t-2">
-                      <TableCell colSpan={2} className="font-bold">Total Pengeluaran</TableCell>
-                      <TableCell className="text-right font-bold">{formatCurrency(totalRencanaPengeluaran)}</TableCell>
-                      <TableCell className="text-right font-bold">{formatCurrency(totalRealisasiPengeluaran)}</TableCell>
-                      <TableCell className="text-right font-bold">{getPersentase(totalRealisasiPengeluaran, totalRencanaPengeluaran)}</TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              
+              {pengeluaran.length === 0 ? (
+                <div className="text-center p-8 bg-muted/30 rounded-lg">
+                  <p className="text-muted-foreground">Belum ada data pengeluaran</p>
+                  <Button onClick={() => handleAddItem('pengeluaran')} variant="outline" className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" /> Tambah Item
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {pengeluaran.map((item, index) => (
+                    <ItemCard 
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      type="pengeluaran"
+                      onRemove={() => handleRemoveItem(item.id, 'pengeluaran')}
+                    />
+                  ))}
+                  
+                  <SummaryCard
+                    title="Total Pengeluaran"
+                    rencana={totalRencanaPengeluaran}
+                    realisasi={totalRealisasiPengeluaran}
+                  />
+                </>
+              )}
             </TabsContent>
             
             <TabsContent value="bukti" className="space-y-4">
@@ -546,40 +604,38 @@ const PondokLPJ = () => {
             <TabsContent value="summary">
               <Card className="border-none shadow-none">
                 <CardContent className="p-0">
-                  <div className="grid gap-4">
-                    <div className="bg-muted/30 p-4 rounded-md">
-                      <h3 className="font-medium mb-2">Ringkasan LPJ</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Total Pemasukan (Rencana):</span>
-                          <span className="font-medium">{formatCurrency(totalRencanaPemasukan)}</span>
+                  <div className="space-y-4">
+                    <SummaryCard
+                      title="Total Pemasukan"
+                      rencana={totalRencanaPemasukan}
+                      realisasi={totalRealisasiPemasukan}
+                    />
+                    
+                    <SummaryCard
+                      title="Total Pengeluaran"
+                      rencana={totalRencanaPengeluaran}
+                      realisasi={totalRealisasiPengeluaran}
+                    />
+                    
+                    <Card className="mb-4">
+                      <CardContent className="p-4">
+                        <h3 className="font-medium text-lg mb-2">Saldo</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Saldo (Rencana)</p>
+                            <p className={`font-medium ${totalRencanaPemasukan - totalRencanaPengeluaran >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {formatCurrency(totalRencanaPemasukan - totalRencanaPengeluaran)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Saldo (Realisasi)</p>
+                            <p className={`font-medium ${totalRealisasiPemasukan - totalRealisasiPengeluaran >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {formatCurrency(totalRealisasiPemasukan - totalRealisasiPengeluaran)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Total Pemasukan (Realisasi):</span>
-                          <span className="font-medium">{formatCurrency(totalRealisasiPemasukan)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Total Pengeluaran (Rencana):</span>
-                          <span className="font-medium">{formatCurrency(totalRencanaPengeluaran)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Total Pengeluaran (Realisasi):</span>
-                          <span className="font-medium">{formatCurrency(totalRealisasiPengeluaran)}</span>
-                        </div>
-                        <div className="border-t pt-2 flex justify-between font-bold">
-                          <span>Saldo Awal (Rencana):</span>
-                          <span className={totalRencanaPemasukan - totalRencanaPengeluaran >= 0 ? "text-green-600" : "text-red-600"}>
-                            {formatCurrency(totalRencanaPemasukan - totalRencanaPengeluaran)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between font-bold">
-                          <span>Saldo Akhir (Realisasi):</span>
-                          <span className={totalRealisasiPemasukan - totalRealisasiPengeluaran >= 0 ? "text-green-600" : "text-red-600"}>
-                            {formatCurrency(totalRealisasiPemasukan - totalRealisasiPengeluaran)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                     
                     <div className="flex justify-end">
                       <Button 
@@ -602,3 +658,4 @@ const PondokLPJ = () => {
 };
 
 export default PondokLPJ;
+
