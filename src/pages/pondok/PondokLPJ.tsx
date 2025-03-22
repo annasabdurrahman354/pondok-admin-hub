@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Upload, Save, AlertCircle, Trash2, Edit, Check } from 'lucide-react';
+import { Plus, Save, AlertCircle, Trash2, Edit, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGetLPJs, useLPJMutations } from '@/hooks/use-pondok-data';
 import { useSession } from '@/context/SessionContext';
@@ -12,24 +12,146 @@ import { LPJPemasukan, LPJPengeluaran } from '@/types/dataTypes';
 import { fetchLPJPeriode, fetchRABDetail } from '@/services/apiService';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
+import React from 'react';
+
+// Memoized ItemCard component to prevent re-renders
+interface ItemCardProps {
+  item: LPJPemasukan | LPJPengeluaran;
+  index: number;
+  type: string;
+  onRemove: (id: string, type: string) => void;
+  onChangeName: (id: string, type: string, value: string) => void;
+  onChangeRencana: (id: string, type: string, value: string) => void;
+  onChangeRealisasi: (id: string, type: string, value: string) => void;
+  getPersentase: (realisasi: number, rencana: number) => string;
+}
+
+const ItemCard: React.FC<ItemCardProps> = React.memo(({ 
+  item, 
+  index, 
+  type, 
+  onRemove, 
+  onChangeName,
+  onChangeRencana,
+  onChangeRealisasi,
+  getPersentase
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="mb-3"
+    >
+      <Card className="overflow-hidden">
+        <CardHeader className="p-3 flex flex-row items-center justify-between bg-muted/30">
+          <div className="flex items-center justify-between w-full">
+            <Input 
+              value={item.nama}
+              onChange={(e) => onChangeName(item.id, type, e.target.value)}
+              className="w-full mr-2"
+              placeholder="Nama item"
+            />
+            <Button variant="ghost" size="icon" onClick={() => onRemove(item.id, type)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Rencana</p>
+              <Input 
+                type="number"
+                value={item.rencana}
+                onChange={(e) => onChangeRencana(item.id, type, e.target.value)}
+                className="w-full"
+                placeholder='nominal'
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Realisasi</p>
+              <Input 
+                type="number"
+                value={item.realisasi}
+                onChange={(e) => onChangeRealisasi(item.id, type, e.target.value)}
+                className="w-full"
+                placeholder='nominal'
+              />
+            </div>
+          </div>
+          <div className="mt-2">
+            <p className="text-xs text-muted-foreground mb-1">Persentase Realisasi</p>
+            <div className="w-full bg-muted rounded-full h-2.5">
+              <div 
+                className="bg-primary h-2.5 rounded-full" 
+                style={{ width: `${Math.min(100, Math.round((item.realisasi / (item.rencana || 1)) * 100))}%` }}
+              />
+            </div>
+            <p className="text-xs mt-1 text-right">{getPersentase(item.realisasi, item.rencana)}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+});
+
+// Memoized SummaryCard component
+interface SummaryCardProps {
+  title: string;
+  rencana: number;
+  realisasi: number;
+  formatCurrency: (amount: number) => string;
+  getPersentase: (realisasi: number, rencana: number) => string;
+}
+
+const SummaryCard: React.FC<SummaryCardProps> = React.memo(({ 
+  title, 
+  rencana, 
+  realisasi,
+  formatCurrency,
+  getPersentase
+}) => (
+  <Card className="mb-4 bg-muted/20">
+    <CardContent className="p-4">
+      <h3 className="font-medium text-lg mb-2">{title}</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-xs text-muted-foreground">Rencana</p>
+          <p className="font-medium">{formatCurrency(rencana)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Realisasi</p>
+          <p className="font-medium">{formatCurrency(realisasi)}</p>
+        </div>
+      </div>
+      <div className="mt-2">
+        <p className="text-xs text-muted-foreground mb-1">Persentase Realisasi</p>
+        <div className="w-full bg-muted rounded-full h-2.5">
+          <div 
+            className="bg-primary h-2.5 rounded-full" 
+            style={{ width: `${Math.min(100, Math.round((realisasi / (rencana || 1)) * 100))}%` }}
+          />
+        </div>
+        <p className="text-xs mt-1 text-right">{getPersentase(realisasi, rencana)}</p>
+      </div>
+    </CardContent>
+  </Card>
+));
 
 const PondokLPJ = () => {
   const navigate = useNavigate();
   const { user } = useSession();
   const [activeTab, setActiveTab] = useState('pemasukan');
-  const [currentPeriodeId, setCurrentPeriodeId] = useState<string | null>(null);
+  const [currentPeriodeId, setCurrentPeriodeId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [rabId, setRabId] = useState<string | null>(null);
+  const [rabId, setRabId] = useState(null);
   
   // LPJ data state
-  const [pemasukan, setPemasukan] = useState<LPJPemasukan[]>([]);
-  const [pengeluaran, setPengeluaran] = useState<LPJPengeluaran[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [pemasukan, setPemasukan] = useState([]);
+  const [pengeluaran, setPengeluaran] = useState([]);
   
   const { data: lpjs = [], isLoading: isLoadingLpjs } = useGetLPJs();
   const { createLPJMutation } = useLPJMutations();
@@ -63,7 +185,7 @@ const PondokLPJ = () => {
   // Check if user already has an LPJ for the current period
   const currentPeriodLPJ = lpjs.find(lpj => lpj.periode_id === currentPeriodeId);
   
-  const calculatePreviousPeriode = (periodeId: string): string | null => {
+  const calculatePreviousPeriode = (periodeId) => {
     // Format is YYYYMM
     const year = parseInt(periodeId.substring(0, 4));
     const month = parseInt(periodeId.substring(4, 6));
@@ -79,13 +201,11 @@ const PondokLPJ = () => {
     return `${prevYear}${prevMonth.toString().padStart(2, '0')}`;
   };
   
-  const fetchPreviousRABData = async (periodeId: string, pondokId: string) => {
+  const fetchPreviousRABData = async (periodeId, pondokId) => {
     try {
       setIsLoading(true);
-      // Try to get the RAB data from API for the previous period
-      // This is where we'll load real data from the previous RAB if it exists
       
-      // First, let's try to find any RAB from the specified period
+      // Try to get the RAB data from API for the previous period
       const rabResponse = await fetch(`/api/rab?period=${periodeId}&pondok=${pondokId}`);
       
       if (rabResponse.ok) {
@@ -124,7 +244,6 @@ const PondokLPJ = () => {
       }
       
       // If we're here, it means we couldn't find a RAB or get its details
-      // Let's set up some default empty items or sample data
       toast.info('Tidak ditemukan RAB dari periode sebelumnya. Anda dapat menambahkan item secara manual.');
       setPemasukan([]);
       setPengeluaran([]);
@@ -141,21 +260,26 @@ const PondokLPJ = () => {
     }
   };
   
-  const handleChangeRealisasi = (id: string, type: 'pemasukan' | 'pengeluaran', value: string) => {
+  // Item handlers with useCallback to prevent unnecessary re-renders
+  const handleChangeRealisasi = useCallback((id, type, value) => {
     const numValue = parseFloat(value) || 0;
     
     if (type === 'pemasukan') {
-      setPemasukan(pemasukan.map(item => 
-        item.id === id ? { ...item, realisasi: numValue } : item
-      ));
+      setPemasukan(prevPemasukan => 
+        prevPemasukan.map(item => 
+          item.id === id ? { ...item, realisasi: numValue } : item
+        )
+      );
     } else {
-      setPengeluaran(pengeluaran.map(item => 
-        item.id === id ? { ...item, realisasi: numValue } : item
-      ));
+      setPengeluaran(prevPengeluaran => 
+        prevPengeluaran.map(item => 
+          item.id === id ? { ...item, realisasi: numValue } : item
+        )
+      );
     }
-  };
+  }, []);
   
-  const handleAddItem = (type: 'pemasukan' | 'pengeluaran') => {
+  const handleAddItem = useCallback((type) => {
     const newItem = {
       id: `temp-${Math.random().toString(36).substr(2, 9)}`,
       lpj_id: 'temp',
@@ -165,56 +289,77 @@ const PondokLPJ = () => {
     };
     
     if (type === 'pemasukan') {
-      setPemasukan([...pemasukan, newItem]);
+      setPemasukan(prevPemasukan => [...prevPemasukan, newItem]);
     } else {
-      setPengeluaran([...pengeluaran, newItem]);
+      setPengeluaran(prevPengeluaran => [...prevPengeluaran, newItem]);
     }
-  };
+  }, []);
   
-  const handleRemoveItem = (id: string, type: 'pemasukan' | 'pengeluaran') => {
+  const handleRemoveItem = useCallback((id, type) => {
     if (type === 'pemasukan') {
-      setPemasukan(pemasukan.filter(item => item.id !== id));
+      setPemasukan(prevPemasukan => prevPemasukan.filter(item => item.id !== id));
     } else {
-      setPengeluaran(pengeluaran.filter(item => item.id !== id));
+      setPengeluaran(prevPengeluaran => prevPengeluaran.filter(item => item.id !== id));
     }
-  };
+  }, []);
   
-  const handleChangeName = (id: string, type: 'pemasukan' | 'pengeluaran', value: string) => {
+  const handleChangeName = useCallback((id, type, value) => {
     if (type === 'pemasukan') {
-      setPemasukan(pemasukan.map(item => 
-        item.id === id ? { ...item, nama: value } : item
-      ));
+      setPemasukan(prevPemasukan => 
+        prevPemasukan.map(item => 
+          item.id === id ? { ...item, nama: value } : item
+        )
+      );
     } else {
-      setPengeluaran(pengeluaran.map(item => 
-        item.id === id ? { ...item, nama: value } : item
-      ));
+      setPengeluaran(prevPengeluaran => 
+        prevPengeluaran.map(item => 
+          item.id === id ? { ...item, nama: value } : item
+        )
+      );
     }
-  };
+  }, []);
   
-  const handleChangeRencana = (id: string, type: 'pemasukan' | 'pengeluaran', value: string) => {
+  const handleChangeRencana = useCallback((id, type, value) => {
     const numValue = parseFloat(value) || 0;
     
     if (type === 'pemasukan') {
-      setPemasukan(pemasukan.map(item => 
-        item.id === id ? { ...item, rencana: numValue } : item
-      ));
+      setPemasukan(prevPemasukan => 
+        prevPemasukan.map(item => 
+          item.id === id ? { ...item, rencana: numValue } : item
+        )
+      );
     } else {
-      setPengeluaran(pengeluaran.map(item => 
-        item.id === id ? { ...item, rencana: numValue } : item
-      ));
+      setPengeluaran(prevPengeluaran => 
+        prevPengeluaran.map(item => 
+          item.id === id ? { ...item, rencana: numValue } : item
+        )
+      );
     }
-  };
+  }, []);
   
-  const handleUploadBukti = () => {
-    if (!selectedFile) {
-      toast.error('Pilih file terlebih dahulu');
-      return;
+  // Check if form is valid
+  const isFormValid = useMemo(() => {
+    // Must have at least one item in both pemasukan and pengeluaran
+    if (pemasukan.length === 0 || pengeluaran.length === 0) {
+      return false;
     }
     
-    // In a real implementation, you would upload the file to your server/storage
-    toast.success('Bukti berhasil diunggah');
-    setSelectedFile(null);
-  };
+    // All pemasukan items must have name and valid values
+    const isPemasukanValid = pemasukan.every(item => 
+      item.nama.trim() !== '' && 
+      !isNaN(item.rencana) && 
+      !isNaN(item.realisasi)
+    );
+    
+    // All pengeluaran items must have name and valid values
+    const isPengeluaranValid = pengeluaran.every(item => 
+      item.nama.trim() !== '' && 
+      !isNaN(item.rencana) && 
+      !isNaN(item.realisasi)
+    );
+    
+    return isPemasukanValid && isPengeluaranValid;
+  }, [pemasukan, pengeluaran]);
   
   const handleCreateLPJ = async () => {
     if (!currentPeriodeId || !user?.pondok_id) {
@@ -222,17 +367,8 @@ const PondokLPJ = () => {
       return;
     }
     
-    if (pemasukan.length === 0 || pengeluaran.length === 0) {
-      toast.error('LPJ harus memiliki minimal 1 pemasukan dan 1 pengeluaran');
-      return;
-    }
-    
-    // Validate that all items have names
-    const emptyPemasukan = pemasukan.find(item => !item.nama.trim());
-    const emptyPengeluaran = pengeluaran.find(item => !item.nama.trim());
-    
-    if (emptyPemasukan || emptyPengeluaran) {
-      toast.error('Semua item harus memiliki nama');
+    if (!isFormValid) {
+      toast.error('Semua item harus memiliki nama, rencana, dan realisasi');
       return;
     }
     
@@ -262,24 +398,20 @@ const PondokLPJ = () => {
     }
   };
   
-  const formatCurrency = (amount: number | string) => {
+  // Utility functions wrapped in useCallback to optimize renders
+  const formatCurrency = useCallback((amount) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
     }).format(num || 0);
-  };
+  }, []);
 
-  const getPersentase = (realisasi: number, rencana: number) => {
+  const getPersentase = useCallback((realisasi, rencana) => {
     if (rencana === 0) return '0%';
     return `${Math.round((realisasi / rencana) * 100)}%`;
-  };
-
-  // Toggle edit mode for an item
-  const toggleEditMode = (id: string | null) => {
-    setEditingId(id);
-  };
+  }, []);
 
   // Calculate totals
   const totalRencanaPemasukan = pemasukan.reduce((sum, item) => sum + item.rencana, 0);
@@ -288,6 +420,7 @@ const PondokLPJ = () => {
   const totalRencanaPengeluaran = pengeluaran.reduce((sum, item) => sum + item.rencana, 0);
   const totalRealisasiPengeluaran = pengeluaran.reduce((sum, item) => sum + item.realisasi, 0);
   
+  // Loading state
   if (isLoading || isLoadingLpjs) {
     return (
       <div className="flex justify-center py-8">
@@ -296,6 +429,7 @@ const PondokLPJ = () => {
     );
   }
   
+  // No active period
   if (!currentPeriodeId) {
     return (
       <div className="space-y-6">
@@ -314,6 +448,7 @@ const PondokLPJ = () => {
     );
   }
   
+  // LPJ already exists for current period
   if (currentPeriodLPJ) {
     return (
       <div className="space-y-6">
@@ -337,139 +472,6 @@ const PondokLPJ = () => {
     );
   }
 
-  // Item Card Component for Pemasukan and Pengeluaran
-  const ItemCard = ({ 
-    item, 
-    index, 
-    type, 
-    onRemove 
-  }: { 
-    item: LPJPemasukan | LPJPengeluaran, 
-    index: number, 
-    type: 'pemasukan' | 'pengeluaran',
-    onRemove: () => void
-  }) => {
-    const isEditing = editingId === item.id;
-    const handleSave = () => toggleEditMode(null);
-    
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className="mb-3"
-      >
-        <Card className="overflow-hidden">
-          <CardHeader className="p-3 flex flex-row items-center justify-between bg-muted/30">
-            <div className="flex items-center justify-between w-full">
-              {isEditing ? (
-                <Input 
-                  value={item.nama}
-                  onChange={(e) => handleChangeName(item.id, type, e.target.value)}
-                  className="w-full mr-2"
-                  placeholder="Nama item"
-                />
-              ) : (
-                <p className="font-medium truncate">{item.nama || 'Untitled'}</p>
-              )}
-              <div className="flex items-center space-x-1">
-                {isEditing ? (
-                  <Button variant="ghost" size="icon" onClick={handleSave}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="icon" onClick={() => toggleEditMode(item.id)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" onClick={onRemove}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Rencana</p>
-                {isEditing ? (
-                  <Input 
-                    type="number"
-                    value={item.rencana}
-                    onChange={(e) => handleChangeRencana(item.id, type, e.target.value)}
-                    className="w-full"
-                  />
-                ) : (
-                  <p className="font-medium">{formatCurrency(item.rencana)}</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Realisasi</p>
-                {isEditing ? (
-                  <Input 
-                    type="number"
-                    value={item.realisasi}
-                    onChange={(e) => handleChangeRealisasi(item.id, type, e.target.value)}
-                    className="w-full"
-                  />
-                ) : (
-                  <p className="font-medium">{formatCurrency(item.realisasi)}</p>
-                )}
-              </div>
-            </div>
-            <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-1">Persentase Realisasi</p>
-              <div className="w-full bg-muted rounded-full h-2.5">
-                <div 
-                  className="bg-primary h-2.5 rounded-full" 
-                  style={{ width: `${Math.min(100, Math.round((item.realisasi / (item.rencana || 1)) * 100))}%` }}
-                />
-              </div>
-              <p className="text-xs mt-1 text-right">{getPersentase(item.realisasi, item.rencana)}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-
-  // Summary Card Component
-  const SummaryCard = ({ 
-    title, 
-    rencana, 
-    realisasi 
-  }: { 
-    title: string, 
-    rencana: number, 
-    realisasi: number 
-  }) => (
-    <Card className="mb-4 bg-muted/20">
-      <CardContent className="p-4">
-        <h3 className="font-medium text-lg mb-2">{title}</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground">Rencana</p>
-            <p className="font-medium">{formatCurrency(rencana)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Realisasi</p>
-            <p className="font-medium">{formatCurrency(realisasi)}</p>
-          </div>
-        </div>
-        <div className="mt-2">
-          <p className="text-xs text-muted-foreground mb-1">Persentase Realisasi</p>
-          <div className="w-full bg-muted rounded-full h-2.5">
-            <div 
-              className="bg-primary h-2.5 rounded-full" 
-              style={{ width: `${Math.min(100, Math.round((realisasi / (rencana || 1)) * 100))}%` }}
-            />
-          </div>
-          <p className="text-xs mt-1 text-right">{getPersentase(realisasi, rencana)}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -480,7 +482,10 @@ const PondokLPJ = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Buat LPJ Baru</CardTitle>
-          <Button onClick={handleCreateLPJ} disabled={isCreating || pemasukan.length === 0 || pengeluaran.length === 0}>
+          <Button 
+            onClick={handleCreateLPJ} 
+            disabled={isCreating || !isFormValid}
+          >
             <Save className="w-4 h-4 mr-2" />
             Simpan LPJ
           </Button>
@@ -490,23 +495,19 @@ const PondokLPJ = () => {
             <TabsList className="mb-4 w-full">
               <TabsTrigger value="pemasukan" className="flex-1">Pemasukan</TabsTrigger>
               <TabsTrigger value="pengeluaran" className="flex-1">Pengeluaran</TabsTrigger>
-              <TabsTrigger value="bukti" className="flex-1">Bukti</TabsTrigger>
               <TabsTrigger value="summary" className="flex-1">Ringkasan</TabsTrigger>
             </TabsList>
             
             <TabsContent value="pemasukan" className="space-y-4">
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-center mb-4">
                 <Button onClick={() => handleAddItem('pemasukan')} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" /> Tambah Pemasukan
                 </Button>
               </div>
               
               {pemasukan.length === 0 ? (
-                <div className="text-center p-8 bg-muted/30 rounded-lg">
+                <div className="text-center p-2 bg-muted/30 rounded-lg">
                   <p className="text-muted-foreground">Belum ada data pemasukan</p>
-                  <Button onClick={() => handleAddItem('pemasukan')} variant="outline" className="mt-4">
-                    <Plus className="h-4 w-4 mr-2" /> Tambah Item
-                  </Button>
                 </div>
               ) : (
                 <>
@@ -516,7 +517,11 @@ const PondokLPJ = () => {
                       item={item}
                       index={index}
                       type="pemasukan"
-                      onRemove={() => handleRemoveItem(item.id, 'pemasukan')}
+                      onRemove={handleRemoveItem}
+                      onChangeName={handleChangeName}
+                      onChangeRencana={handleChangeRencana}
+                      onChangeRealisasi={handleChangeRealisasi}
+                      getPersentase={getPersentase}
                     />
                   ))}
                   
@@ -524,24 +529,23 @@ const PondokLPJ = () => {
                     title="Total Pemasukan"
                     rencana={totalRencanaPemasukan}
                     realisasi={totalRealisasiPemasukan}
+                    formatCurrency={formatCurrency}
+                    getPersentase={getPersentase}
                   />
                 </>
               )}
             </TabsContent>
             
             <TabsContent value="pengeluaran" className="space-y-4">
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-center mb-4">
                 <Button onClick={() => handleAddItem('pengeluaran')} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" /> Tambah Pengeluaran
                 </Button>
               </div>
               
               {pengeluaran.length === 0 ? (
-                <div className="text-center p-8 bg-muted/30 rounded-lg">
+                <div className="text-center p-2 bg-muted/30 rounded-lg">
                   <p className="text-muted-foreground">Belum ada data pengeluaran</p>
-                  <Button onClick={() => handleAddItem('pengeluaran')} variant="outline" className="mt-4">
-                    <Plus className="h-4 w-4 mr-2" /> Tambah Item
-                  </Button>
                 </div>
               ) : (
                 <>
@@ -551,7 +555,11 @@ const PondokLPJ = () => {
                       item={item}
                       index={index}
                       type="pengeluaran"
-                      onRemove={() => handleRemoveItem(item.id, 'pengeluaran')}
+                      onRemove={handleRemoveItem}
+                      onChangeName={handleChangeName}
+                      onChangeRencana={handleChangeRencana}
+                      onChangeRealisasi={handleChangeRealisasi}
+                      getPersentase={getPersentase}
                     />
                   ))}
                   
@@ -559,46 +567,11 @@ const PondokLPJ = () => {
                     title="Total Pengeluaran"
                     rencana={totalRencanaPengeluaran}
                     realisasi={totalRealisasiPengeluaran}
+                    formatCurrency={formatCurrency}
+                    getPersentase={getPersentase}
                   />
                 </>
               )}
-            </TabsContent>
-            
-            <TabsContent value="bukti" className="space-y-4">
-              <Card className="border-none shadow-none">
-                <CardContent className="p-0">
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <input
-                        type="file"
-                        id="file-upload"
-                        className="hidden"
-                        onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])}
-                      />
-                      <label
-                        htmlFor="file-upload"
-                        className="cursor-pointer block"
-                      >
-                        <Upload className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                        <span className="text-lg font-medium block">
-                          {selectedFile ? selectedFile.name : "Unggah Bukti LPJ"}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          Klik untuk memilih file atau seret file ke sini
-                        </span>
-                      </label>
-                    </div>
-                    
-                    {selectedFile && (
-                      <div className="flex justify-end">
-                        <Button onClick={handleUploadBukti}>
-                          Unggah Bukti
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
             
             <TabsContent value="summary">
@@ -609,12 +582,16 @@ const PondokLPJ = () => {
                       title="Total Pemasukan"
                       rencana={totalRencanaPemasukan}
                       realisasi={totalRealisasiPemasukan}
+                      formatCurrency={formatCurrency}
+                      getPersentase={getPersentase}
                     />
                     
                     <SummaryCard
                       title="Total Pengeluaran"
                       rencana={totalRencanaPengeluaran}
                       realisasi={totalRealisasiPengeluaran}
+                      formatCurrency={formatCurrency}
+                      getPersentase={getPersentase}
                     />
                     
                     <Card className="mb-4">
@@ -640,7 +617,7 @@ const PondokLPJ = () => {
                     <div className="flex justify-end">
                       <Button 
                         onClick={handleCreateLPJ} 
-                        disabled={isCreating || pemasukan.length === 0 || pengeluaran.length === 0}
+                        disabled={isCreating || !isFormValid}
                       >
                         <Save className="w-4 h-4 mr-2" />
                         Simpan LPJ
@@ -658,4 +635,3 @@ const PondokLPJ = () => {
 };
 
 export default PondokLPJ;
-

@@ -23,12 +23,12 @@ const PondokDashboard: React.FC = () => {
   const { 
     data: rabs = [], 
     isLoading: isRabsLoading 
-  } = useGetRABs(3);
+  } = useGetRABs(10);
   
   const { 
     data: lpjs = [], 
     isLoading: isLpjsLoading 
-  } = useGetLPJs(3);
+  } = useGetLPJs(10);
   
   // Calculate total for RAB and LPJ
   const totalRabPemasukan = rabs[0]?.rabPemasukan?.reduce(
