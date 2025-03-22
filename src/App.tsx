@@ -20,6 +20,10 @@ import PondokSettings from "@/pages/pondok/PondokSettings";
 import PondokCreate from "@/pages/pondok/PondokCreate";
 import PondokRABList from "@/pages/pondok/PondokRABList";
 import PondokLPJList from "@/pages/pondok/PondokLPJList";
+import PondokRABDetail from "@/pages/pondok/PondokRABDetail";
+import PondokLPJDetail from "@/pages/pondok/PondokLPJDetail";
+import PondokRABCreate from "@/pages/pondok/PondokRABCreate";
+import PondokLPJCreate from "@/pages/pondok/PondokLPJCreate";
 
 // Yayasan Pages
 import YayasanDashboard from "@/pages/yayasan/YayasanDashboard";
@@ -66,16 +70,18 @@ const App = () => (
             <Route element={<ProtectedRoute requiredRole="Admin Pondok" />}>
               <Route path="/pondok" element={<PondokLayout />}>
                 <Route path="dashboard" element={<PondokDashboard />} />
-                <Route path="rab" element={<PondokRAB />} />
-                <Route path="lpj" element={<PondokLPJ />} />
                 <Route path="rab-list" element={<PondokRABList />} />
+                <Route path="rab/detail/:rabId" element={<PondokRABDetail />} />
                 <Route path="lpj-list" element={<PondokLPJList />} />
+                <Route path="lpj/detail/:lpjId" element={<PondokLPJDetail />} />
                 <Route path="settings" element={<PondokSettings />} />
               </Route>
             </Route>
             
-            {/* Pondok Sync (outside of layout but still protected) */}
+            {/* Standalone pages - still protected for Admin Pondok role */}
             <Route element={<ProtectedRoute requiredRole="Admin Pondok" />}>
+              <Route path="/pondok/rab/create" element={<PondokRABCreate />} />
+              <Route path="/pondok/lpj/create" element={<PondokLPJCreate />} />
               <Route path="/pondok/sync" element={<PondokSync />} />
             </Route>
             

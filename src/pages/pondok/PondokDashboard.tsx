@@ -1,10 +1,12 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataCard } from '@/components/ui/data-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Clock, AlertTriangle, CheckCircle, FileText, Plus } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/services/formatUtils';
 import RABItem from '@/components/pondok/RABItem';
 import LPJItem from '@/components/pondok/LPJItem';
@@ -117,22 +119,32 @@ const PondokDashboard: React.FC = () => {
           </TabsList>
           <TabsContent value="rab">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Rencana Anggaran Biaya Terbaru</CardTitle>
-                <CardDescription>Daftar RAB yang telah dibuat</CardDescription>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Rencana Anggaran Biaya Terbaru</CardTitle>
+                  <CardDescription>Daftar RAB yang telah dibuat</CardDescription>
+                </div>
+                <Link to="/pondok/rab/create">
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Buat RAB
+                  </Button>
+                </Link>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {rabs.length > 0 ? (
                     rabs.map((rab, index) => (
-                      <RABItem key={rab.id} rab={rab} index={index} />
+                      <Link to={`/pondok/rab/detail/${rab.id}`} key={rab.id}>
+                        <RABItem rab={rab} index={index} />
+                      </Link>
                     ))
                   ) : (
                     <EmptyState 
                       title="Belum ada RAB"
                       description="Anda belum memiliki Rencana Anggaran Biaya"
                       buttonText="Buat RAB"
-                      buttonLink="/pondok/rab"
+                      buttonLink="/pondok/rab/create"
                     />
                   )}
                 </div>
@@ -141,22 +153,32 @@ const PondokDashboard: React.FC = () => {
           </TabsContent>
           <TabsContent value="lpj">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Laporan Pertanggungjawaban Terbaru</CardTitle>
-                <CardDescription>Daftar LPJ yang telah dibuat</CardDescription>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Laporan Pertanggungjawaban Terbaru</CardTitle>
+                  <CardDescription>Daftar LPJ yang telah dibuat</CardDescription>
+                </div>
+                <Link to="/pondok/lpj/create">
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Buat LPJ
+                  </Button>
+                </Link>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {lpjs.length > 0 ? (
                     lpjs.map((lpj, index) => (
-                      <LPJItem key={lpj.id} lpj={lpj} index={index} />
+                      <Link to={`/pondok/lpj/detail/${lpj.id}`} key={lpj.id}>
+                        <LPJItem lpj={lpj} index={index} />
+                      </Link>
                     ))
                   ) : (
                     <EmptyState 
                       title="Belum ada LPJ"
                       description="Anda belum memiliki Laporan Pertanggungjawaban"
                       buttonText="Buat LPJ"
-                      buttonLink="/pondok/lpj"
+                      buttonLink="/pondok/lpj/create"
                     />
                   )}
                 </div>
