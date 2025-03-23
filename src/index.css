@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Base colors inspired by Apple's minimalist design */
+    /* Material 3 inspired colorful palette */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
 
@@ -15,36 +15,42 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 210 100% 50%;
+    /* More vibrant primary blue */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    /* Soft secondary purple */
+    --secondary: 262 60% 92%;
+    --secondary-foreground: 262 83% 38%;
 
+    /* Muted tones */
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+    /* Accent colors */
+    --accent: 280 65% 96%;
+    --accent-foreground: 280 75% 38%;
 
+    /* Destructive red */
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
+    /* Border and input colors */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 222 84% 48%;
+    --ring: 262 83% 58%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Sidebar specific colors */
-    --sidebar-background: 210 40% 98%;
+    --sidebar-background: 262 60% 97%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 222 84% 48%;
+    --sidebar-accent: 280 65% 96%;
+    --sidebar-accent-foreground: 280 75% 38%;
+    --sidebar-border: 262 30% 91%;
+    --sidebar-ring: 262 83% 58%;
   }
 
   * {
@@ -93,5 +99,26 @@
   
   .page-transition-exit {
     @apply animate-fade-out;
+  }
+  
+  /* Material 3 specific utilities */
+  .material-card {
+    @apply rounded-xl shadow-sm bg-card border-none transition-shadow hover:shadow-md;
+  }
+  
+  .material-button {
+    @apply rounded-full font-medium transition-all;
+  }
+  
+  .material-surface {
+    @apply rounded-2xl p-6 bg-secondary/30;
+  }
+  
+  .material-elevation-1 {
+    @apply shadow-sm;
+  }
+  
+  .material-elevation-2 {
+    @apply shadow-md;
   }
 }
