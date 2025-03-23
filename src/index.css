@@ -6,16 +6,16 @@
 @layer base {
   :root {
     /* Material 3 inspired colorful palette */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 260 40% 98%;
+    --foreground: 262 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 262 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 262 47% 11%;
 
-    /* More vibrant primary blue */
+    /* More vibrant primary purple */
     --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
 
@@ -24,8 +24,8 @@
     --secondary-foreground: 262 83% 38%;
 
     /* Muted tones */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 260 40% 96%;
+    --muted-foreground: 265 16% 47%;
 
     /* Accent colors */
     --accent: 280 65% 96%;
@@ -33,24 +33,14 @@
 
     /* Destructive red */
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 260 40% 98%;
 
     /* Border and input colors */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 264 32% 91%;
+    --input: 264 32% 91%;
     --ring: 262 83% 58%;
 
     --radius: 1rem;
-
-    /* Sidebar specific colors */
-    --sidebar-background: 262 60% 97%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 262 83% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 280 65% 96%;
-    --sidebar-accent-foreground: 280 75% 38%;
-    --sidebar-border: 262 30% 91%;
-    --sidebar-ring: 262 83% 58%;
   }
 
   * {
