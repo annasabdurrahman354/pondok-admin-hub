@@ -2,21 +2,27 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Save, Send, AlertCircle, CalendarIcon, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { 
+  ChevronLeft, Save, Send, AlertCircle, CalendarIcon, 
+  Clock, CheckCircle, AlertTriangle, Edit, ArrowLeft
+} from 'lucide-react';
 import { formatCurrency, formatDate, formatPeriode } from '@/services/formatUtils';
 import { useGetRABDetail, useRABMutations } from '@/hooks/use-pondok-data';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 const PondokRABDetail: React.FC = () => {
   const { rabId } = useParams<{ rabId: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRevisionDialogOpen, setIsRevisionDialogOpen] = useState(false);
   
   // Fetch RAB detail data
   const { 
@@ -25,7 +31,7 @@ const PondokRABDetail: React.FC = () => {
     isError 
   } = useGetRABDetail(rabId || '');
   
-  const { submitRABMutation } = useRABMutations();
+  const { submitRABMutation, updateRABMutation } = useRABMutations();
 
   // Handle RAB submission
   const handleSubmitRAB = async () => {
@@ -38,6 +44,31 @@ const PondokRABDetail: React.FC = () => {
     } catch (error) {
       console.error('Failed to submit RAB:', error);
       toast.error('Gagal mengajukan RAB');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle revisions after receiving feedback
+  const handleRevisionSubmit = async (revisionNote: string) => {
+    if (!rabId || !rabDetail) return;
+    
+    try {
+      setIsSubmitting(true);
+      await updateRABMutation.mutateAsync({
+        rabId,
+        rabData: {
+          status: 'diajukan',
+          submit_at: new Date().toISOString(),
+          revisi_note: revisionNote
+        }
+      });
+      
+      setIsRevisionDialogOpen(false);
+      toast.success('Revisi RAB berhasil diajukan');
+    } catch (error) {
+      console.error('Failed to submit RAB revision:', error);
+      toast.error('Gagal mengajukan revisi RAB');
     } finally {
       setIsSubmitting(false);
     }
@@ -117,6 +148,42 @@ const PondokRABDetail: React.FC = () => {
     }
   };
 
+  // Revision Dialog Component
+  const RevisionDialog = () => {
+    const [revisionNote, setRevisionNote] = useState("");
+    
+    return (
+      <Dialog open={isRevisionDialogOpen} onOpenChange={setIsRevisionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Submit RAB Revision</DialogTitle>
+            <DialogDescription>
+              After making necessary changes to the RAB, add your revision notes and submit the updated RAB.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Textarea
+              placeholder="Catatan revisi (opsional)"
+              value={revisionNote}
+              onChange={(e) => setRevisionNote(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRevisionDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => handleRevisionSubmit(revisionNote)} disabled={isSubmitting}>
+              Submit Revision
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -125,7 +192,7 @@ const PondokRABDetail: React.FC = () => {
         className="mb-2"
       >
         <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Kembali
         </Button>
       </PageHeader>
@@ -157,12 +224,12 @@ const PondokRABDetail: React.FC = () => {
               </Alert>
             )}
             
-            {rab.status === 'revisi' && rab.revisi_note && (
+            {rab.status === 'revisi' && rab.pesan_revisi && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>RAB perlu direvisi</AlertTitle>
                 <AlertDescription>
-                  Catatan: {rab.revisi_note}
+                  Catatan dari Yayasan: {rab.pesan_revisi}
                 </AlertDescription>
               </Alert>
             )}
@@ -285,9 +352,32 @@ const PondokRABDetail: React.FC = () => {
                 </Button>
               </div>
             )}
+            
+            {rab.status === 'revisi' && (
+              <div className="flex justify-end mt-4">
+                <Button 
+                  onClick={() => navigate(`/pondok/rab/edit/${rab.id}`)}
+                  variant="outline"
+                  className="mr-2"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit RAB
+                </Button>
+                
+                <Button 
+                  onClick={() => setIsRevisionDialogOpen(true)}
+                  disabled={isSubmitting}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Ajukan Revisi
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+      
+      <RevisionDialog />
     </div>
   );
 };

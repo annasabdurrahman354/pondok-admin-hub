@@ -6,6 +6,22 @@ import { motion } from 'framer-motion';
 const PondokNavigation = () => {
   const location = useLocation();
   
+  // Define the routes that should show the bottom navigation
+  const showNavRoutes = [
+    '/pondok/dashboard',
+    '/pondok/rab-list',
+    '/pondok/lpj-list',
+    '/pondok/settings'
+  ];
+  
+  // Check if current route should show navigation
+  const shouldShowNav = showNavRoutes.includes(location.pathname);
+  
+  // If we shouldn't show nav, return null
+  if (!shouldShowNav) {
+    return null;
+  }
+  
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/pondok/dashboard' },
     { icon: FileText, label: 'RAB', path: '/pondok/rab-list' },

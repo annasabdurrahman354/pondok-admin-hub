@@ -68,20 +68,21 @@ const App = () => (
             
             {/* Pondok Admin Routes - Protected for Admin Pondok role */}
             <Route element={<ProtectedRoute requiredRole="Admin Pondok" />}>
+              {/* Pages with bottom navigation */}
               <Route path="/pondok" element={<PondokLayout />}>
                 <Route path="dashboard" element={<PondokDashboard />} />
                 <Route path="rab-list" element={<PondokRABList />} />
-                <Route path="rab/detail/:rabId" element={<PondokRABDetail />} />
                 <Route path="lpj-list" element={<PondokLPJList />} />
-                <Route path="lpj/detail/:lpjId" element={<PondokLPJDetail />} />
                 <Route path="settings" element={<PondokSettings />} />
               </Route>
-            </Route>
-            
-            {/* Standalone pages - still protected for Admin Pondok role */}
-            <Route element={<ProtectedRoute requiredRole="Admin Pondok" />}>
+              
+              {/* Standalone pages (without bottom navigation) */}
+              <Route path="/pondok/rab/detail/:rabId" element={<PondokRABDetail />} />
+              <Route path="/pondok/lpj/detail/:lpjId" element={<PondokLPJDetail />} />
               <Route path="/pondok/rab/create" element={<PondokRABCreate />} />
+              <Route path="/pondok/rab/edit/:rabId" element={<PondokRAB />} />
               <Route path="/pondok/lpj/create" element={<PondokLPJCreate />} />
+              <Route path="/pondok/lpj/edit/:lpjId" element={<PondokLPJ />} />
               <Route path="/pondok/sync" element={<PondokSync />} />
             </Route>
             
