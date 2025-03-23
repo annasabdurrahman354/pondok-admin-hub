@@ -81,52 +81,7 @@ const YayasanDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Pending Pondok Approvals */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Persetujuan Pondok</CardTitle>
-            <CardDescription>
-              Pondok yang menunggu persetujuan untuk diaktifkan
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isPondoksLoading ? (
-              <div className="flex justify-center py-4">
-                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : pendingPondoks?.filter(p => !p.status_acc).length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">
-                Tidak ada Pondok yang menunggu persetujuan
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingPondoks?.filter(p => !p.status_acc).map((pondok) => (
-                  <div key={pondok.id} className="flex items-center justify-between border-b pb-3">
-                    <div>
-                      <h4 className="font-medium">{pondok.nama}</h4>
-                      <p className="text-sm text-muted-foreground">{pondok.alamat}, {pondok.kota}</p>
-                    </div>
-                    <Button 
-                      size="sm"
-                      onClick={() => handleApprovePondok(pondok.id)}
-                      disabled={approvePondokMutation.isPending}
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      Setujui
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="mt-4">
-              <Button asChild variant="outline" size="sm" className="w-full">
-                <Link to="/yayasan/pondok">Lihat Semua Pondok</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="gap-4 grid lg:grid-cols-2">
         {/* Recent RAB Submissions */}
         <Card className="col-span-1">
           <CardHeader>
@@ -173,7 +128,7 @@ const YayasanDashboard = () => {
         </Card>
 
         {/* Recent LPJ Submissions */}
-        <Card className="col-span-2">
+        <Card className="col-span-1">
           <CardHeader>
             <CardTitle>LPJ Terbaru</CardTitle>
             <CardDescription>
@@ -190,7 +145,7 @@ const YayasanDashboard = () => {
                 Tidak ada LPJ yang baru diajukan
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="gap-4">
                 {pendingLPJs?.map((lpj: any) => (
                   <div key={lpj.id} className="flex items-center justify-between border-b pb-3">
                     <div>
@@ -216,6 +171,52 @@ const YayasanDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Pending Pondok Approvals */}
+        <Card className="col-span-1 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Persetujuan Pondok</CardTitle>
+            <CardDescription>
+              Pondok yang menunggu persetujuan untuk diaktifkan
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isPondoksLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : pendingPondoks?.filter(p => !p.status_acc).length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                Tidak ada Pondok yang menunggu persetujuan
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingPondoks?.filter(p => !p.status_acc).map((pondok) => (
+                  <div key={pondok.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h4 className="font-medium">{pondok.nama}</h4>
+                      <p className="text-sm text-muted-foreground">{pondok.alamat}, {pondok.kota}</p>
+                    </div>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleApprovePondok(pondok.id)}
+                      disabled={approvePondokMutation.isPending}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Setujui
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4">
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to="/yayasan/pondok">Lihat Semua Pondok</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );

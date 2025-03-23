@@ -94,10 +94,9 @@ const LpjDetail = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
+      <div className="flex items-start">
         <Button variant="ghost" onClick={() => navigate('/yayasan/lpj')} className="mr-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali
         </Button>
         <PageHeader 
           title="Detail LPJ"
@@ -112,7 +111,6 @@ const LpjDetail = () => {
             <CardDescription>Pondok: {lpj.pondok?.nama || 'Unknown'}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {getStatusBadge(lpj.status)}
             {lpj.status === 'diajukan' && (
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleApproveLPJ} disabled={approveLPJMutation.isPending}>
@@ -188,7 +186,6 @@ const LpjDetail = () => {
             <TabsList className="mb-4">
               <TabsTrigger value="pemasukan">Pemasukan</TabsTrigger>
               <TabsTrigger value="pengeluaran">Pengeluaran</TabsTrigger>
-              <TabsTrigger value="bukti">Bukti</TabsTrigger>
               <TabsTrigger value="summary">Ringkasan</TabsTrigger>
             </TabsList>
             
@@ -256,15 +253,6 @@ const LpjDetail = () => {
                   </TableRow>
                 </TableBody>
               </Table>
-            </TabsContent>
-            
-            <TabsContent value="bukti">
-              <div className="text-center py-8">
-                <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Bukti LPJ belum tersedia
-                </p>
-              </div>
             </TabsContent>
             
             <TabsContent value="summary">

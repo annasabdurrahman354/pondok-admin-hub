@@ -87,10 +87,9 @@ const RabDetail = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
+      <div className="flex items-start">
         <Button variant="ghost" onClick={() => navigate('/yayasan/rab')} className="mr-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali
         </Button>
         <PageHeader 
           title="Detail RAB"
@@ -105,7 +104,6 @@ const RabDetail = () => {
             <CardDescription>Pondok: {rab.pondok?.nama || 'Unknown'}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {getStatusBadge(rab.status)}
             {rab.status === 'diajukan' && (
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleApproveRAB} disabled={approveRABMutation.isPending}>
