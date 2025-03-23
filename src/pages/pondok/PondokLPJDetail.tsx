@@ -106,6 +106,7 @@ const PondokLPJDetail: React.FC = () => {
       case 'diajukan':
         return <Clock className="h-4 w-4 text-amber-500" />;
       case 'disetujui':
+      case 'diterima':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'revisi':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
@@ -135,7 +136,7 @@ const PondokLPJDetail: React.FC = () => {
             <div className="space-y-1">
               <CardTitle>LPJ {formatPeriode(lpj.periode_id)}</CardTitle>
               <CardDescription>
-                Dibuat pada: {formatDate(lpj.created_at)}
+                Dibuat pada: {formatDate(lpj.created_at || '')}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">

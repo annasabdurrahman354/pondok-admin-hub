@@ -44,10 +44,12 @@ export type RAB = {
   id: string;
   pondok_id: string;
   periode_id: string; // Format YYYYMM
-  status: "diajukan" | "revisi" | "diterima";
+  status: "draft" | "diajukan" | "revisi" | "disetujui" | "diterima";
   submit_at: string | null; // ISO Date
   accepted_at: string | null; // ISO Date
   pesan_revisi: string | null;
+  revisi_note?: string | null;
+  created_at?: string;
   rabPemasukan: RABPemasukan[];
   rabPengeluaran: RABPengeluaran[];
   pondok?: Pondok; // Adding the optional pondok relation
@@ -57,10 +59,12 @@ export type LPJ = {
   id: string;
   pondok_id: string;
   periode_id: string; // Format YYYYMM
-  status: "diajukan" | "revisi" | "diterima";
+  status: "draft" | "diajukan" | "revisi" | "disetujui" | "diterima";
   submit_at: string | null; // ISO Date
   accepted_at: string | null; // ISO Date
   pesan_revisi: string | null;
+  revisi_note?: string | null;
+  created_at?: string;
   lpjPemasukan: LPJPemasukan[];
   lpjPengeluaran: LPJPengeluaran[];
   pondok?: Pondok; // Adding the optional pondok relation

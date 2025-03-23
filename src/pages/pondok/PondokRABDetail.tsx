@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -91,6 +91,7 @@ const PondokRABDetail: React.FC = () => {
       case 'diajukan':
         return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">Menunggu</Badge>;
       case 'disetujui':
+      case 'diterima':
         return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">Disetujui</Badge>;
       case 'revisi':
         return <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">Perlu Revisi</Badge>;
@@ -107,6 +108,7 @@ const PondokRABDetail: React.FC = () => {
       case 'diajukan':
         return <Clock className="h-4 w-4 text-amber-500" />;
       case 'disetujui':
+      case 'diterima':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'revisi':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
@@ -134,7 +136,7 @@ const PondokRABDetail: React.FC = () => {
             <div className="space-y-1">
               <CardTitle>RAB {formatPeriode(rab.periode_id)}</CardTitle>
               <CardDescription>
-                Dibuat pada: {formatDate(rab.created_at)}
+                Dibuat pada: {formatDate(rab.created_at || '')}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
