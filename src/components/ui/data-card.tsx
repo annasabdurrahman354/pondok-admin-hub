@@ -11,6 +11,7 @@ interface DataCardProps {
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
   className?: string;
+  colorVariant?: 'default' | 'purple' | 'blue' | 'green' | 'amber' | 'pink';
 }
 
 export function DataCard({
@@ -20,10 +21,25 @@ export function DataCard({
   description,
   trend,
   trendValue,
-  className
+  className,
+  colorVariant = 'default'
 }: DataCardProps) {
+  // Color variant classes
+  const colorClasses = {
+    default: '',
+    purple: 'bg-purple-50 border-purple-100',
+    blue: 'bg-blue-50 border-blue-100',
+    green: 'bg-green-50 border-green-100',
+    amber: 'bg-amber-50 border-amber-100',
+    pink: 'bg-pink-50 border-pink-100',
+  };
+
   return (
-    <Card className={cn("overflow-hidden transition-all duration-200 card-hover", className)}>
+    <Card className={cn(
+      "overflow-hidden transition-all duration-200 card-hover", 
+      colorClasses[colorVariant],
+      className
+    )}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         {icon && <div className="text-muted-foreground w-4 h-4">{icon}</div>}

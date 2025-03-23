@@ -76,14 +76,14 @@ const App = () => (
                 <Route path="settings" element={<PondokSettings />} />
               </Route>
               
-              {/* Standalone pages (without bottom navigation) */}
-              <Route path="/pondok/rab/detail/:rabId" element={<PondokRABDetail />} />
-              <Route path="/pondok/lpj/detail/:lpjId" element={<PondokLPJDetail />} />
-              <Route path="/pondok/rab/create" element={<PondokRABCreate />} />
-              <Route path="/pondok/rab/edit/:rabId" element={<PondokRAB />} />
-              <Route path="/pondok/lpj/create" element={<PondokLPJCreate />} />
-              <Route path="/pondok/lpj/edit/:lpjId" element={<PondokLPJ />} />
-              <Route path="/pondok/sync" element={<PondokSync />} />
+              {/* Standalone pages (without bottom navigation) - wrapped with container for padding */}
+              <Route path="/pondok/rab/detail/:rabId" element={<div className="container mx-auto px-4 py-6"><PondokRABDetail /></div>} />
+              <Route path="/pondok/lpj/detail/:lpjId" element={<div className="container mx-auto px-4 py-6"><PondokLPJDetail /></div>} />
+              <Route path="/pondok/rab/create" element={<div className="container mx-auto px-4 py-6"><PondokRABCreate /></div>} />
+              <Route path="/pondok/rab/edit/:rabId" element={<div className="container mx-auto px-4 py-6"><PondokRAB /></div>} />
+              <Route path="/pondok/lpj/create" element={<div className="container mx-auto px-4 py-6"><PondokLPJCreate /></div>} />
+              <Route path="/pondok/lpj/edit/:lpjId" element={<div className="container mx-auto px-4 py-6"><PondokLPJ /></div>} />
+              <Route path="/pondok/sync" element={<div className="container mx-auto px-4 py-6"><PondokSync /></div>} />
             </Route>
             
             {/* Yayasan Admin Routes - Protected for Admin Yayasan role */}

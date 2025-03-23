@@ -20,7 +20,11 @@ const PondokLayout = () => {
   
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
-      <ScrollArea className="flex-1 px-4" style={{ paddingBottom: shouldShowNav ? '4rem' : '0' }}>
+      <ScrollArea className="flex-1 px-4" style={{ 
+        paddingBottom: shouldShowNav ? '4rem' : '0',
+        overflowY: shouldShowNav ? 'auto' : 'auto',
+        maxHeight: '100vh' 
+      }}>
         <div className="container max-w-screen-xl mx-auto pt-6 pb-20">
           <PageTransition>
             <Outlet />

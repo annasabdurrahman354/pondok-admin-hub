@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -76,4 +77,77 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+// Colorful Card variants
+const PurpleCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <Card
+    ref={ref}
+    className={cn("bg-purple-50 border-purple-100", className)}
+    {...props}
+  />
+))
+PurpleCard.displayName = "PurpleCard"
+
+const BlueCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <Card
+    ref={ref}
+    className={cn("bg-blue-50 border-blue-100", className)}
+    {...props}
+  />
+))
+BlueCard.displayName = "BlueCard"
+
+const GreenCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <Card
+    ref={ref}
+    className={cn("bg-green-50 border-green-100", className)}
+    {...props}
+  />
+))
+GreenCard.displayName = "GreenCard"
+
+const AmberCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <Card
+    ref={ref}
+    className={cn("bg-amber-50 border-amber-100", className)}
+    {...props}
+  />
+))
+AmberCard.displayName = "AmberCard"
+
+const PinkCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <Card
+    ref={ref}
+    className={cn("bg-pink-50 border-pink-100", className)}
+    {...props}
+  />
+))
+PinkCard.displayName = "PinkCard"
+
+export { 
+  Card, 
+  CardHeader, 
+  CardFooter, 
+  CardTitle, 
+  CardDescription, 
+  CardContent,
+  PurpleCard,
+  BlueCard,
+  GreenCard,
+  AmberCard,
+  PinkCard
+}
