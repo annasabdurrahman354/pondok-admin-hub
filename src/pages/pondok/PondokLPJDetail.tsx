@@ -18,12 +18,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const PondokLPJDetail: React.FC = () => {
   const { lpjId } = useParams<{ lpjId: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRevisionDialogOpen, setIsRevisionDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   // Fetch LPJ detail data
   const { 
@@ -51,7 +53,7 @@ const PondokLPJDetail: React.FC = () => {
   };
 
   // Handle revisions after receiving feedback
-  const handleRevisionSubmit = async (revisionNote: string) => {
+  const handleRevisionSubmit = async () => {
     if (!lpjId || !lpjDetail) return;
     
     try {
@@ -60,8 +62,7 @@ const PondokLPJDetail: React.FC = () => {
         lpjId,
         lpjData: {
           status: 'diajukan',
-          submit_at: new Date().toISOString(),
-          revisi_note: revisionNote
+          submit_at: new Date().toISOString()
         }
       });
       
@@ -73,6 +74,11 @@ const PondokLPJDetail: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Handle navigate to edit page
+  const handleEditLPJ = () => {
+    navigate(`/pondok/lpj/edit/${lpjId}`);
   };
 
   // Loading state
@@ -94,7 +100,7 @@ const PondokLPJDetail: React.FC = () => {
           className="mb-2"
         >
           <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-1 h-4 w-4" />
             Kembali
           </Button>
         </PageHeader>
@@ -162,41 +168,33 @@ const PondokLPJDetail: React.FC = () => {
     }
   };
 
-  // Revision Dialog Component
-  const RevisionDialog = () => {
-    const [revisionNote, setRevisionNote] = useState("");
-    
+  // Confirmation Dialog Component
+  const ConfirmationDialog = () => {
     return (
       <Dialog open={isRevisionDialogOpen} onOpenChange={setIsRevisionDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Submit LPJ Revision</DialogTitle>
+            <DialogTitle>Ajukan Revisi LPJ</DialogTitle>
             <DialogDescription>
-              After making necessary changes to the LPJ, add your revision notes and submit the updated LPJ.
+              Apakah Anda yakin ingin mengajukan revisi LPJ ini?
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <Textarea
-              placeholder="Catatan revisi (opsional)"
-              value={revisionNote}
-              onChange={(e) => setRevisionNote(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRevisionDialogOpen(false)}>
-              Cancel
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setIsRevisionDialogOpen(false)} className="w-full sm:w-auto">
+              Batal
             </Button>
-            <Button onClick={() => handleRevisionSubmit(revisionNote)} disabled={isSubmitting}>
-              Submit Revision
+            <Button onClick={handleRevisionSubmit} disabled={isSubmitting} className="w-full sm:w-auto">
+              {isSubmitting ? 'Sedang Diproses...' : 'Ajukan Revisi'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     );
   };
+  
+  const textSizeClass = isMobile ? "text-xs" : "text-sm";
+  const cardContentPadding = isMobile ? "p-2" : "p-4";
 
   return (
     <div className="bg-background">
@@ -206,17 +204,17 @@ const PondokLPJDetail: React.FC = () => {
         className="mb-2"
       >
         <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1 h-4 w-4" />
           Kembali
         </Button>
       </PageHeader>
       
-      <Card>
-        <CardHeader>
+      <Card className="bg-card">
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle>LPJ {formatPeriode(lpj.periode_id)}</CardTitle>
-              <CardDescription>
+              <CardTitle className={isMobile ? "text-base" : "text-lg"}>LPJ {formatPeriode(lpj.periode_id)}</CardTitle>
+              <CardDescription className={isMobile ? "text-xs" : "text-sm"}>
                 Dibuat pada: {formatDate(lpj.created_at || '')}
               </CardDescription>
             </div>
@@ -226,59 +224,59 @@ const PondokLPJDetail: React.FC = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className={`pb-3 ${cardContentPadding}`}>
+          <div className="space-y-3">
             {lpj.status === 'draft' && (
-              <Alert>
+              <Alert className="p-3">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>LPJ dalam status draft</AlertTitle>
-                <AlertDescription>
+                <AlertTitle className={textSizeClass}>LPJ dalam status draft</AlertTitle>
+                <AlertDescription className={textSizeClass}>
                   LPJ ini belum diajukan ke Yayasan. Klik tombol "Ajukan LPJ" untuk mengirimkan ke Yayasan.
                 </AlertDescription>
               </Alert>
             )}
             
             {lpj.status === 'revisi' && lpj.pesan_revisi && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="p-3">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>LPJ perlu direvisi</AlertTitle>
-                <AlertDescription>
-                  Catatan dari Yayasan: {lpj.pesan_revisi}
+                <AlertTitle className={textSizeClass}>Perlu Revisi</AlertTitle>
+                <AlertDescription className={textSizeClass}>
+                  {lpj.pesan_revisi}
                 </AlertDescription>
               </Alert>
             )}
             
-            <div className="space-y-6">
+            <div className="space-y-4">
               <Tabs defaultValue="pemasukan" className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="pemasukan">Pemasukan</TabsTrigger>
-                  <TabsTrigger value="pengeluaran">Pengeluaran</TabsTrigger>
-                  <TabsTrigger value="summary">Ringkasan</TabsTrigger>
+                <TabsList className="mb-3 h-9">
+                  <TabsTrigger value="pemasukan" className={textSizeClass}>Pemasukan</TabsTrigger>
+                  <TabsTrigger value="pengeluaran" className={textSizeClass}>Pengeluaran</TabsTrigger>
+                  <TabsTrigger value="summary" className={textSizeClass}>Ringkasan</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="pemasukan">
-                  <Card className="border-none shadow-none">
+                  <Card className="border-none shadow-none bg-background/50">
                     <CardContent className="p-0">
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div className="rounded-md border">
-                          <div className="bg-muted/50 p-3 grid grid-cols-12 gap-2 font-medium">
-                            <div className="col-span-4">Nama</div>
-                            <div className="col-span-3">Rencana</div>
-                            <div className="col-span-3">Realisasi</div>
-                            <div className="col-span-2">Persentase</div>
+                          <div className="bg-muted/50 p-2 grid grid-cols-12 gap-2 font-medium">
+                            <div className={`col-span-4 ${textSizeClass}`}>Nama</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>Rencana</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>Realisasi</div>
+                            <div className={`col-span-2 ${textSizeClass}`}>%</div>
                           </div>
                           <div className="divide-y">
                             {pemasukan.map((item, index) => {
                               const percentage = calculatePercentage(item.realisasi, item.rencana);
                               
                               return (
-                                <div key={index} className="p-3 grid grid-cols-12 gap-2 items-center">
-                                  <div className="col-span-4">{item.nama}</div>
-                                  <div className="col-span-3">{formatCurrency(item.rencana)}</div>
-                                  <div className="col-span-3">{formatCurrency(item.realisasi)}</div>
+                                <div key={index} className="p-2 grid grid-cols-12 gap-2 items-center">
+                                  <div className={`col-span-4 ${textSizeClass}`}>{item.nama}</div>
+                                  <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(item.rencana)}</div>
+                                  <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(item.realisasi)}</div>
                                   <div className="col-span-2">
-                                    <div className="flex items-center gap-2">
-                                      <Progress value={percentage} className="h-2" />
+                                    <div className="flex items-center gap-1">
+                                      <Progress value={percentage} className="h-1.5" />
                                       <span className="text-xs">{percentage}%</span>
                                     </div>
                                   </div>
@@ -286,15 +284,15 @@ const PondokLPJDetail: React.FC = () => {
                               );
                             })}
                           </div>
-                          <div className="bg-muted/30 p-3 grid grid-cols-12 gap-2 font-medium">
-                            <div className="col-span-4">Total</div>
-                            <div className="col-span-3">{formatCurrency(totalRencanaPemasukan)}</div>
-                            <div className="col-span-3">{formatCurrency(totalRealisasiPemasukan)}</div>
+                          <div className="bg-muted/30 p-2 grid grid-cols-12 gap-2 font-medium">
+                            <div className={`col-span-4 ${textSizeClass}`}>Total</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(totalRencanaPemasukan)}</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(totalRealisasiPemasukan)}</div>
                             <div className="col-span-2">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
                                 <Progress 
                                   value={calculatePercentage(totalRealisasiPemasukan, totalRencanaPemasukan)} 
-                                  className="h-2" 
+                                  className="h-1.5" 
                                 />
                                 <span className="text-xs">
                                   {calculatePercentage(totalRealisasiPemasukan, totalRencanaPemasukan)}%
@@ -309,28 +307,28 @@ const PondokLPJDetail: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="pengeluaran">
-                  <Card className="border-none shadow-none">
+                  <Card className="border-none shadow-none bg-background/50">
                     <CardContent className="p-0">
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div className="rounded-md border">
-                          <div className="bg-muted/50 p-3 grid grid-cols-12 gap-2 font-medium">
-                            <div className="col-span-4">Nama</div>
-                            <div className="col-span-3">Rencana</div>
-                            <div className="col-span-3">Realisasi</div>
-                            <div className="col-span-2">Persentase</div>
+                          <div className="bg-muted/50 p-2 grid grid-cols-12 gap-2 font-medium">
+                            <div className={`col-span-4 ${textSizeClass}`}>Nama</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>Rencana</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>Realisasi</div>
+                            <div className={`col-span-2 ${textSizeClass}`}>%</div>
                           </div>
                           <div className="divide-y">
                             {pengeluaran.map((item, index) => {
                               const percentage = calculatePercentage(item.realisasi, item.rencana);
                               
                               return (
-                                <div key={index} className="p-3 grid grid-cols-12 gap-2 items-center">
-                                  <div className="col-span-4">{item.nama}</div>
-                                  <div className="col-span-3">{formatCurrency(item.rencana)}</div>
-                                  <div className="col-span-3">{formatCurrency(item.realisasi)}</div>
+                                <div key={index} className="p-2 grid grid-cols-12 gap-2 items-center">
+                                  <div className={`col-span-4 ${textSizeClass}`}>{item.nama}</div>
+                                  <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(item.rencana)}</div>
+                                  <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(item.realisasi)}</div>
                                   <div className="col-span-2">
-                                    <div className="flex items-center gap-2">
-                                      <Progress value={percentage} className="h-2" />
+                                    <div className="flex items-center gap-1">
+                                      <Progress value={percentage} className="h-1.5" />
                                       <span className="text-xs">{percentage}%</span>
                                     </div>
                                   </div>
@@ -338,15 +336,15 @@ const PondokLPJDetail: React.FC = () => {
                               );
                             })}
                           </div>
-                          <div className="bg-muted/30 p-3 grid grid-cols-12 gap-2 font-medium">
-                            <div className="col-span-4">Total</div>
-                            <div className="col-span-3">{formatCurrency(totalRencanaPengeluaran)}</div>
-                            <div className="col-span-3">{formatCurrency(totalRealisasiPengeluaran)}</div>
+                          <div className="bg-muted/30 p-2 grid grid-cols-12 gap-2 font-medium">
+                            <div className={`col-span-4 ${textSizeClass}`}>Total</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(totalRencanaPengeluaran)}</div>
+                            <div className={`col-span-3 ${textSizeClass}`}>{formatCurrency(totalRealisasiPengeluaran)}</div>
                             <div className="col-span-2">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
                                 <Progress 
                                   value={calculatePercentage(totalRealisasiPengeluaran, totalRencanaPengeluaran)} 
-                                  className="h-2" 
+                                  className="h-1.5" 
                                 />
                                 <span className="text-xs">
                                   {calculatePercentage(totalRealisasiPengeluaran, totalRencanaPengeluaran)}%
@@ -361,16 +359,16 @@ const PondokLPJDetail: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="summary">
-                  <Card className="border-none shadow-none">
+                  <Card className="border-none shadow-none bg-background/50">
                     <CardContent className="p-0">
-                      <div className="space-y-4">
-                        <div className="bg-muted/30 p-4 rounded-md">
-                          <h3 className="font-medium mb-4">Ringkasan LPJ</h3>
+                      <div className="space-y-3">
+                        <div className="bg-muted/30 p-3 rounded-md">
+                          <h3 className={`font-medium mb-2 ${isMobile ? "text-sm" : "text-base"}`}>Ringkasan LPJ</h3>
                           
-                          <div className="space-y-6">
+                          <div className="space-y-4">
                             <div>
-                              <h4 className="text-sm font-medium mb-2">Pemasukan</h4>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
+                              <h4 className={`font-medium mb-1 ${textSizeClass}`}>Pemasukan</h4>
+                              <div className="grid grid-cols-2 gap-1 text-xs">
                                 <div>Rencana:</div>
                                 <div className="text-right font-medium">{formatCurrency(totalRencanaPemasukan)}</div>
                                 <div>Realisasi:</div>
@@ -385,8 +383,8 @@ const PondokLPJDetail: React.FC = () => {
                             <Separator />
                             
                             <div>
-                              <h4 className="text-sm font-medium mb-2">Pengeluaran</h4>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
+                              <h4 className={`font-medium mb-1 ${textSizeClass}`}>Pengeluaran</h4>
+                              <div className="grid grid-cols-2 gap-1 text-xs">
                                 <div>Rencana:</div>
                                 <div className="text-right font-medium">{formatCurrency(totalRencanaPengeluaran)}</div>
                                 <div>Realisasi:</div>
@@ -401,8 +399,8 @@ const PondokLPJDetail: React.FC = () => {
                             <Separator />
                             
                             <div>
-                              <h4 className="text-sm font-medium mb-2">Saldo</h4>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
+                              <h4 className={`font-medium mb-1 ${textSizeClass}`}>Saldo</h4>
+                              <div className="grid grid-cols-2 gap-1 text-xs">
                                 <div>Rencana:</div>
                                 <div className={`text-right font-medium ${saldoRencana >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                   {formatCurrency(saldoRencana)}
@@ -417,10 +415,10 @@ const PondokLPJDetail: React.FC = () => {
                         </div>
                         
                         {saldoRealisasi < 0 && (
-                          <Alert variant="destructive">
+                          <Alert variant="destructive" className="p-3">
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Peringatan Saldo Negatif</AlertTitle>
-                            <AlertDescription>
+                            <AlertTitle className={textSizeClass}>Peringatan Saldo Negatif</AlertTitle>
+                            <AlertDescription className={textSizeClass}>
                               Total realisasi pengeluaran melebihi total realisasi pemasukan.
                             </AlertDescription>
                           </Alert>
@@ -433,33 +431,35 @@ const PondokLPJDetail: React.FC = () => {
             </div>
             
             {lpj.status === 'draft' && (
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end mt-3 space-x-2">
                 <Button 
                   onClick={handleSubmitLPJ} 
                   disabled={isSubmitting}
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-4 h-4 mr-1" />
                   Ajukan LPJ
                 </Button>
               </div>
             )}
             
             {lpj.status === 'revisi' && (
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end mt-3 space-x-2">
                 <Button 
-                  onClick={() => navigate(`/pondok/lpj/edit/${lpj.id}`)}
+                  onClick={handleEditLPJ}
                   variant="outline"
-                  className="mr-2"
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Edit className="w-4 h-4 mr-2" />
+                  <Edit className="w-4 h-4 mr-1" />
                   Edit LPJ
                 </Button>
                 
                 <Button 
                   onClick={() => setIsRevisionDialogOpen(true)}
                   disabled={isSubmitting}
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-4 h-4 mr-1" />
                   Ajukan Revisi
                 </Button>
               </div>
@@ -468,7 +468,7 @@ const PondokLPJDetail: React.FC = () => {
         </CardContent>
       </Card>
       
-      <RevisionDialog />
+      <ConfirmationDialog />
     </div>
   );
 };

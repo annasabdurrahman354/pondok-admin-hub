@@ -473,7 +473,7 @@ const PondokLPJEdit = () => {
             Anda sudah membuat LPJ untuk periode ini. Silakan lihat detail LPJ yang ada.
           </AlertDescription>
         </Alert>
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-4">
           <Button onClick={() => navigate(`/pondok/lpj/detail/${currentPeriodLPJ.id}`, { replace: true })}>
             Lihat Detail LPJ
           </Button>

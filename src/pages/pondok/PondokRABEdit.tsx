@@ -203,7 +203,7 @@ const PondokRABEdit = () => {
             Anda sudah membuat RAB untuk periode ini. Silakan lihat detail RAB yang ada.
           </AlertDescription>
         </Alert>
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-4">
           <Button onClick={() => navigate(`/pondok/rab/detail/${currentPeriodRAB.id}`, { replace: true })}>
             Lihat Detail RAB
           </Button>
