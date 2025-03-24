@@ -17,14 +17,12 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const PondokRABDetail: React.FC = () => {
   const { rabId } = useParams<{ rabId: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRevisionDialogOpen, setIsRevisionDialogOpen] = useState(false);
-  const isMobile = useIsMobile();
   
   // Fetch RAB detail data
   const { 
@@ -52,7 +50,7 @@ const PondokRABDetail: React.FC = () => {
   };
 
   // Handle revisions after receiving feedback
-  const handleRevisionSubmit = async () => {
+  const handleRevisionSubmit = async (revisionNote: string) => {
     if (!rabId || !rabDetail) return;
     
     try {
@@ -61,7 +59,8 @@ const PondokRABDetail: React.FC = () => {
         rabId,
         rabData: {
           status: 'diajukan',
-          submit_at: new Date().toISOString()
+          submit_at: new Date().toISOString(),
+          revisi_note: revisionNote
         }
       });
       
@@ -74,17 +73,12 @@ const PondokRABDetail: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-  
-  // Handle navigate to edit page
-  const handleEditRAB = () => {
-    navigate(`/pondok/rab/edit/${rabId}`);
-  };
-  
+
   // Loading state
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -92,14 +86,14 @@ const PondokRABDetail: React.FC = () => {
   // Error state
   if (isError || !rabDetail) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <PageHeader
           title="Detail RAB"
           description="Rencana Anggaran Biaya"
           className="mb-2"
         >
           <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ChevronLeft className="mr-2 h-4 w-4" />
             Kembali
           </Button>
         </PageHeader>
@@ -154,24 +148,35 @@ const PondokRABDetail: React.FC = () => {
     }
   };
 
-  // Confirmation Dialog Component
-  const ConfirmationDialog = () => {
+  // Revision Dialog Component
+  const RevisionDialog = () => {
+    const [revisionNote, setRevisionNote] = useState("");
+    
     return (
       <Dialog open={isRevisionDialogOpen} onOpenChange={setIsRevisionDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ajukan Revisi RAB</DialogTitle>
+            <DialogTitle>Submit RAB Revision</DialogTitle>
             <DialogDescription>
-              Apakah Anda yakin ingin mengajukan revisi RAB ini?
+              After making necessary changes to the RAB, add your revision notes and submit the updated RAB.
             </DialogDescription>
           </DialogHeader>
           
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setIsRevisionDialogOpen(false)} className="w-full sm:w-auto">
-              Batal
+          <div className="py-4">
+            <Textarea
+              placeholder="Catatan revisi (opsional)"
+              value={revisionNote}
+              onChange={(e) => setRevisionNote(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRevisionDialogOpen(false)}>
+              Cancel
             </Button>
-            <Button onClick={handleRevisionSubmit} disabled={isSubmitting} className="w-full sm:w-auto">
-              {isSubmitting ? 'Sedang Diproses...' : 'Ajukan Revisi'}
+            <Button onClick={() => handleRevisionSubmit(revisionNote)} disabled={isSubmitting}>
+              Submit Revision
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -179,28 +184,25 @@ const PondokRABDetail: React.FC = () => {
     );
   };
 
-  const textSizeClass = isMobile ? "text-xs" : "text-sm";
-  const cardContentPadding = isMobile ? "p-2" : "p-4";
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Detail RAB"
         description={`Periode ${formatPeriode(rab.periode_id)}`}
         className="mb-2"
       >
         <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Kembali
         </Button>
       </PageHeader>
       
-      <Card className="bg-card">
-        <CardHeader className="pb-2">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle className={isMobile ? "text-base" : "text-lg"}>RAB {formatPeriode(rab.periode_id)}</CardTitle>
-              <CardDescription className={isMobile ? "text-xs" : "text-sm"}>
+              <CardTitle>RAB {formatPeriode(rab.periode_id)}</CardTitle>
+              <CardDescription>
                 Dibuat pada: {formatDate(rab.created_at || '')}
               </CardDescription>
             </div>
@@ -210,56 +212,56 @@ const PondokRABDetail: React.FC = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className={`pb-3 ${cardContentPadding}`}>
-          <div className="space-y-3">
+        <CardContent>
+          <div className="space-y-4">
             {rab.status === 'draft' && (
-              <Alert className="p-3">
+              <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle className={textSizeClass}>RAB dalam status draft</AlertTitle>
-                <AlertDescription className={textSizeClass}>
+                <AlertTitle>RAB dalam status draft</AlertTitle>
+                <AlertDescription>
                   RAB ini belum diajukan ke Yayasan. Klik tombol "Ajukan RAB" untuk mengirimkan ke Yayasan.
                 </AlertDescription>
               </Alert>
             )}
             
             {rab.status === 'revisi' && rab.pesan_revisi && (
-              <Alert variant="destructive" className="p-3">
+              <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle className={textSizeClass}>Perlu Revisi</AlertTitle>
-                <AlertDescription className={textSizeClass}>
-                  {rab.pesan_revisi}
+                <AlertTitle>RAB perlu direvisi</AlertTitle>
+                <AlertDescription>
+                  Catatan dari Yayasan: {rab.pesan_revisi}
                 </AlertDescription>
               </Alert>
             )}
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <Tabs defaultValue="pemasukan" className="w-full">
-                <TabsList className="mb-3 h-9">
-                  <TabsTrigger value="pemasukan" className={textSizeClass}>Pemasukan</TabsTrigger>
-                  <TabsTrigger value="pengeluaran" className={textSizeClass}>Pengeluaran</TabsTrigger>
-                  <TabsTrigger value="summary" className={textSizeClass}>Ringkasan</TabsTrigger>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="pemasukan">Pemasukan</TabsTrigger>
+                  <TabsTrigger value="pengeluaran">Pengeluaran</TabsTrigger>
+                  <TabsTrigger value="summary">Ringkasan</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="pemasukan">
-                  <Card className="border-none shadow-none bg-background/50">
+                  <Card className="border-none shadow-none">
                     <CardContent className="p-0">
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div className="rounded-md border">
-                          <div className="bg-muted/50 p-2 flex items-center justify-between font-medium">
-                            <div className={textSizeClass}>Nama Pemasukan</div>
-                            <div className={textSizeClass}>Nominal</div>
+                          <div className="bg-muted/50 p-3 flex items-center justify-between font-medium">
+                            <div>Nama Pemasukan</div>
+                            <div>Nominal</div>
                           </div>
                           <div className="divide-y">
                             {pemasukan.map((item, index) => (
-                              <div key={index} className="p-2 flex items-center justify-between">
-                                <div className={textSizeClass}>{item.nama}</div>
-                                <div className={textSizeClass}>{formatCurrency(item.nominal)}</div>
+                              <div key={index} className="p-3 flex items-center justify-between">
+                                <div>{item.nama}</div>
+                                <div>{formatCurrency(item.nominal)}</div>
                               </div>
                             ))}
                           </div>
-                          <div className="bg-muted/30 p-2 flex items-center justify-between font-medium">
-                            <div className={textSizeClass}>Total Pemasukan</div>
-                            <div className={textSizeClass}>{formatCurrency(totalPemasukan)}</div>
+                          <div className="bg-muted/30 p-3 flex items-center justify-between font-medium">
+                            <div>Total Pemasukan</div>
+                            <div>{formatCurrency(totalPemasukan)}</div>
                           </div>
                         </div>
                       </div>
@@ -268,29 +270,29 @@ const PondokRABDetail: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="pengeluaran">
-                  <Card className="border-none shadow-none bg-background/50">
+                  <Card className="border-none shadow-none">
                     <CardContent className="p-0">
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div className="rounded-md border">
-                          <div className="bg-muted/50 p-2 grid grid-cols-12 gap-2 font-medium">
-                            <div className={`col-span-3 ${textSizeClass}`}>Kategori</div>
-                            <div className={`col-span-4 ${textSizeClass}`}>Nama</div>
-                            <div className={`col-span-3 ${textSizeClass}`}>Detail</div>
-                            <div className={`col-span-2 text-right ${textSizeClass}`}>Nominal</div>
+                          <div className="bg-muted/50 p-3 grid grid-cols-12 gap-2 font-medium">
+                            <div className="col-span-3">Kategori</div>
+                            <div className="col-span-4">Nama</div>
+                            <div className="col-span-3">Detail</div>
+                            <div className="col-span-2 text-right">Nominal</div>
                           </div>
                           <div className="divide-y">
                             {pengeluaran.map((item, index) => (
-                              <div key={index} className="p-2 grid grid-cols-12 gap-2">
-                                <div className={`col-span-3 ${textSizeClass}`}>{item.kategori}</div>
-                                <div className={`col-span-4 ${textSizeClass}`}>{item.nama}</div>
-                                <div className={`col-span-3 ${textSizeClass}`}>{item.detail || '-'}</div>
-                                <div className={`col-span-2 text-right ${textSizeClass}`}>{formatCurrency(item.nominal)}</div>
+                              <div key={index} className="p-3 grid grid-cols-12 gap-2">
+                                <div className="col-span-3">{item.kategori}</div>
+                                <div className="col-span-4">{item.nama}</div>
+                                <div className="col-span-3">{item.detail || '-'}</div>
+                                <div className="col-span-2 text-right">{formatCurrency(item.nominal)}</div>
                               </div>
                             ))}
                           </div>
-                          <div className="bg-muted/30 p-2 flex items-center justify-between font-medium">
-                            <div className={textSizeClass}>Total Pengeluaran</div>
-                            <div className={textSizeClass}>{formatCurrency(totalPengeluaran)}</div>
+                          <div className="bg-muted/30 p-3 flex items-center justify-between font-medium">
+                            <div>Total Pengeluaran</div>
+                            <div>{formatCurrency(totalPengeluaran)}</div>
                           </div>
                         </div>
                       </div>
@@ -299,24 +301,24 @@ const PondokRABDetail: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="summary">
-                  <Card className="border-none shadow-none bg-background/50">
+                  <Card className="border-none shadow-none">
                     <CardContent className="p-0">
-                      <div className="space-y-3">
-                        <div className="bg-muted/30 p-3 rounded-md">
-                          <h3 className={`font-medium mb-2 ${isMobile ? "text-sm" : "text-base"}`}>Ringkasan Anggaran</h3>
+                      <div className="space-y-4">
+                        <div className="bg-muted/30 p-4 rounded-md">
+                          <h3 className="font-medium mb-2">Ringkasan Anggaran</h3>
                           <div className="space-y-2">
                             <div className="flex justify-between">
-                              <span className={textSizeClass}>Total Pemasukan:</span>
-                              <span className={`font-medium ${textSizeClass}`}>{formatCurrency(totalPemasukan)}</span>
+                              <span>Total Pemasukan:</span>
+                              <span className="font-medium">{formatCurrency(totalPemasukan)}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className={textSizeClass}>Total Pengeluaran:</span>
-                              <span className={`font-medium ${textSizeClass}`}>{formatCurrency(totalPengeluaran)}</span>
+                              <span>Total Pengeluaran:</span>
+                              <span className="font-medium">{formatCurrency(totalPengeluaran)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold">
-                              <span className={textSizeClass}>Saldo Akhir:</span>
-                              <span className={`${saldo >= 0 ? "text-green-600" : "text-red-600"} ${textSizeClass}`}>
+                              <span>Saldo Akhir:</span>
+                              <span className={saldo >= 0 ? "text-green-600" : "text-red-600"}>
                                 {formatCurrency(saldo)}
                               </span>
                             </div>
@@ -324,10 +326,10 @@ const PondokRABDetail: React.FC = () => {
                         </div>
                         
                         {saldo < 0 && (
-                          <Alert variant="destructive" className="p-3">
+                          <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle className={textSizeClass}>Peringatan Saldo Negatif</AlertTitle>
-                            <AlertDescription className={textSizeClass}>
+                            <AlertTitle>Peringatan Saldo Negatif</AlertTitle>
+                            <AlertDescription>
                               Total pengeluaran melebihi total pemasukan.
                             </AlertDescription>
                           </Alert>
@@ -340,35 +342,33 @@ const PondokRABDetail: React.FC = () => {
             </div>
             
             {rab.status === 'draft' && (
-              <div className="flex justify-end mt-3 space-x-2">
+              <div className="flex justify-end mt-4">
                 <Button 
                   onClick={handleSubmitRAB} 
                   disabled={isSubmitting}
-                  size={isMobile ? "sm" : "default"}
                 >
-                  <Send className="w-4 h-4 mr-1" />
+                  <Send className="w-4 h-4 mr-2" />
                   Ajukan RAB
                 </Button>
               </div>
             )}
             
             {rab.status === 'revisi' && (
-              <div className="flex justify-end mt-3 space-x-2">
+              <div className="flex justify-end mt-4">
                 <Button 
-                  onClick={handleEditRAB}
+                  onClick={() => navigate(`/pondok/rab/edit/${rab.id}`)}
                   variant="outline"
-                  size={isMobile ? "sm" : "default"}
+                  className="mr-2"
                 >
-                  <Edit className="w-4 h-4 mr-1" />
+                  <Edit className="w-4 h-4 mr-2" />
                   Edit RAB
                 </Button>
                 
                 <Button 
                   onClick={() => setIsRevisionDialogOpen(true)}
                   disabled={isSubmitting}
-                  size={isMobile ? "sm" : "default"}
                 >
-                  <Send className="w-4 h-4 mr-1" />
+                  <Send className="w-4 h-4 mr-2" />
                   Ajukan Revisi
                 </Button>
               </div>
@@ -377,7 +377,7 @@ const PondokRABDetail: React.FC = () => {
         </CardContent>
       </Card>
       
-      <ConfirmationDialog />
+      <RevisionDialog />
     </div>
   );
 };
