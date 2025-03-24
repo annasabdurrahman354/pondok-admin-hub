@@ -14,8 +14,8 @@ import Login from "@/pages/auth/Login";
 // Pondok Pages
 import PondokDashboard from "@/pages/pondok/PondokDashboard";
 import PondokSync from "@/pages/pondok/PondokSync";
-import PondokRAB from "@/pages/pondok/PondokRAB";
-import PondokLPJ from "@/pages/pondok/PondokLPJ";
+import PondokRABEdit from "@/pages/pondok/PondokRABEdit";
+import PondokLPJEdit from "@/pages/pondok/PondokLPJEdit";
 import PondokSettings from "@/pages/pondok/PondokSettings";
 import PondokCreate from "@/pages/pondok/PondokCreate";
 import PondokRABList from "@/pages/pondok/PondokRABList";
@@ -80,10 +80,10 @@ const App = () => (
               <Route path="/pondok/rab/detail/:rabId" element={<div className="container mx-auto px-4 py-6"><PondokRABDetail /></div>} />
               <Route path="/pondok/lpj/detail/:lpjId" element={<div className="container mx-auto px-4 py-6"><PondokLPJDetail /></div>} />
               <Route path="/pondok/rab/create" element={<div className="container mx-auto px-4 py-6"><PondokRABCreate /></div>} />
-              <Route path="/pondok/rab/edit/:rabId" element={<div className="container mx-auto px-4 py-6"><PondokRAB /></div>} />
+              <Route path="/pondok/rab/edit/:rabId" element={<div className="container mx-auto px-4 py-6"><PondokRABEdit /></div>} />
               <Route path="/pondok/lpj/create" element={<div className="container mx-auto px-4 py-6"><PondokLPJCreate /></div>} />
-              <Route path="/pondok/lpj/edit/:lpjId" element={<div className="container mx-auto px-4 py-6"><PondokLPJ /></div>} />
-              <Route path="/pondok/sync" element={<div className="container mx-auto px-4 py-6"><PondokSync /></div>} />
+              <Route path="/pondok/lpj/edit/:lpjId" element={<div className="container mx-auto px-4 py-6"><PondokLPJEdit /></div>} />
+              <Route path="/pondok/sync" element={<div className="container mx-auto px-4"><PondokSync /></div>} />
             </Route>
             
             {/* Yayasan Admin Routes - Protected for Admin Yayasan role */}

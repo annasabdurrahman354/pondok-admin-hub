@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Save, Send, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Save, Send, Trash2, AlertCircle, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGetRABs, useRABMutations } from '@/hooks/use-pondok-data';
@@ -16,7 +16,7 @@ import { fetchRABPeriode } from '@/services/apiService';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const PondokRAB = () => {
+const PondokRABEdit = () => {
   const navigate = useNavigate();
   const { user } = useSession();
   const [activeTab, setActiveTab] = useState('pemasukan');
@@ -155,7 +155,7 @@ const PondokRAB = () => {
   
   if (isLoading || isLoadingRabs) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center align-middle items-center">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -163,11 +163,16 @@ const PondokRAB = () => {
   
   if (!currentPeriodeId) {
     return (
-      <div className="space-y-6">
+      <div className="bg-background">
         <PageHeader
           title="Rencana Anggaran Biaya"
           description="Buat dan kelola RAB Pondok"
-        />
+          >
+          <Button variant="outline" size="sm" onClick={() => navigate(`/pondok/rab/detail/${currentPeriodRAB.id}`, { replace: true })}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Batal
+          </Button>
+        </PageHeader>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Periode RAB tidak tersedia</AlertTitle>
@@ -181,11 +186,16 @@ const PondokRAB = () => {
   
   if (currentPeriodRAB) {
     return (
-      <div className="space-y-6">
+      <div className="bg-background">
         <PageHeader
           title="Rencana Anggaran Biaya"
           description="Buat dan kelola RAB Pondok"
-        />
+        >
+          <Button variant="outline" size="sm" onClick={() => navigate(`/pondok/rab/detail/${currentPeriodRAB.id}`, { replace: true })}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Batal
+          </Button>
+        </PageHeader>
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>RAB sudah dibuat</AlertTitle>
@@ -194,7 +204,7 @@ const PondokRAB = () => {
           </AlertDescription>
         </Alert>
         <div className="flex justify-center">
-          <Button onClick={() => navigate(`/pondok/rab/detail/${currentPeriodRAB.id}`)}>
+          <Button onClick={() => navigate(`/pondok/rab/detail/${currentPeriodRAB.id}`, { replace: true })}>
             Lihat Detail RAB
           </Button>
         </div>
@@ -203,7 +213,7 @@ const PondokRAB = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="bg-background">
       <PageHeader 
         title="Rencana Anggaran Biaya"
         description={`Buat RAB untuk periode ${currentPeriodeId?.substring(0, 4) || ''}-${currentPeriodeId?.substring(4, 6) || ''}`}
@@ -423,4 +433,4 @@ const PondokRAB = () => {
   );
 };
 
-export default PondokRAB;
+export default PondokRABEdit;

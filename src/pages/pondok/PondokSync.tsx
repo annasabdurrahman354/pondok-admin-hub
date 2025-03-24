@@ -375,7 +375,7 @@ const PondokSync = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary/50 px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-secondary/50 px-4 py-8">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Sinkronisasi Data Pondok</h1>

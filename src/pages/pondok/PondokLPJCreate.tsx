@@ -425,7 +425,7 @@ const PondokLPJCreate: React.FC = () => {
   
   if (isLoading || isLoadingLpjs) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center align-middle items-center">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -433,7 +433,7 @@ const PondokLPJCreate: React.FC = () => {
   
   if (!currentPeriodeId) {
     return (
-      <div className="min-h-screen bg-background p-4">
+      <div className="bg-background">
         <PageHeader
           title="Laporan Pertanggungjawaban"
           description="Buat dan kelola LPJ Pondok"
@@ -457,7 +457,7 @@ const PondokLPJCreate: React.FC = () => {
   
   if (currentPeriodLPJ) {
     return (
-      <div className="min-h-screen bg-background p-4">
+      <div className="bg-background">
         <PageHeader
           title="Laporan Pertanggungjawaban"
           description="Buat dan kelola LPJ Pondok"
@@ -485,7 +485,7 @@ const PondokLPJCreate: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="bg-background">
       <PageHeader 
         title="Buat LPJ Baru"
         description={`Periode ${currentPeriodeId?.substring(0, 4) || ''}-${currentPeriodeId?.substring(4, 6) || ''}`}

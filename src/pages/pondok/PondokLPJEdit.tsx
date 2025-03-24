@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Save, AlertCircle, Trash2, Edit, Check } from 'lucide-react';
+import { Plus, Save, AlertCircle, Trash2, Edit, Check, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGetLPJs, useLPJMutations } from '@/hooks/use-pondok-data';
 import { useSession } from '@/context/SessionContext';
@@ -140,7 +140,7 @@ const SummaryCard: React.FC<SummaryCardProps> = React.memo(({
   </Card>
 ));
 
-const PondokLPJ = () => {
+const PondokLPJEdit = () => {
   const navigate = useNavigate();
   const { user } = useSession();
   const [activeTab, setActiveTab] = useState('pemasukan');
@@ -423,7 +423,7 @@ const PondokLPJ = () => {
   // Loading state
   if (isLoading || isLoadingLpjs) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center align-middle items-center">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -432,11 +432,16 @@ const PondokLPJ = () => {
   // No active period
   if (!currentPeriodeId) {
     return (
-      <div className="space-y-6">
+      <div className="bg-background">
         <PageHeader
           title="Laporan Pertanggungjawaban"
           description="Buat dan kelola LPJ Pondok"
-        />
+        >
+          <Button variant="outline" size="sm" onClick={() => navigate(`/pondok/lpj/detail/${currentPeriodLPJ.id}`, { replace: true })}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+            Batal
+          </Button>
+        </PageHeader>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Periode LPJ tidak tersedia</AlertTitle>
@@ -451,11 +456,16 @@ const PondokLPJ = () => {
   // LPJ already exists for current period
   if (currentPeriodLPJ) {
     return (
-      <div className="space-y-6">
+      <div className="bg-background">
         <PageHeader
           title="Laporan Pertanggungjawaban"
           description="Buat dan kelola LPJ Pondok"
-        />
+          >
+          <Button variant="outline" size="sm" onClick={() => navigate(`/pondok/lpj/detail/${currentPeriodLPJ.id}`, { replace: true })}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Batal
+          </Button>
+        </PageHeader>
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>LPJ sudah dibuat</AlertTitle>
@@ -464,7 +474,7 @@ const PondokLPJ = () => {
           </AlertDescription>
         </Alert>
         <div className="flex justify-center">
-          <Button onClick={() => navigate(`/pondok/lpj/detail/${currentPeriodLPJ.id}`)}>
+          <Button onClick={() => navigate(`/pondok/lpj/detail/${currentPeriodLPJ.id}`, { replace: true })}>
             Lihat Detail LPJ
           </Button>
         </div>
@@ -473,7 +483,7 @@ const PondokLPJ = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="bg-background">
       <PageHeader 
         title="Laporan Pertanggungjawaban"
         description={`Buat LPJ untuk periode ${currentPeriodeId?.substring(0, 4) || ''}-${currentPeriodeId?.substring(4, 6) || ''}`}
@@ -634,4 +644,4 @@ const PondokLPJ = () => {
   );
 };
 
-export default PondokLPJ;
+export default PondokLPJEdit;

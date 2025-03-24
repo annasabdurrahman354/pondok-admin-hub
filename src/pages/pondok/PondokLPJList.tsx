@@ -62,14 +62,14 @@ const PondokLPJList = () => {
   
   if (isLoading || isLoadingLpjs) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center align-middle items-center py-6 min-h-screen">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       <PageHeader 
         title="Laporan Pertanggungjawaban"
         description="Daftar LPJ Pondok"
@@ -92,7 +92,7 @@ const PondokLPJList = () => {
         </Card>
       )}
       
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Daftar LPJ</h2>
         <Select value={periodeFilter} onValueChange={setPeriodeFilter}>
           <SelectTrigger className="w-[180px]">

@@ -78,7 +78,7 @@ const PondokLPJDetail: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center align-middle items-center">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -87,7 +87,7 @@ const PondokLPJDetail: React.FC = () => {
   // Error state
   if (isError || !lpjDetail) {
     return (
-      <div className="space-y-6">
+      <div className="bg-background">
         <PageHeader
           title="Detail LPJ"
           description="Laporan Pertanggungjawaban"
@@ -199,7 +199,7 @@ const PondokLPJDetail: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="bg-background">
       <PageHeader
         title="Detail LPJ"
         description={`Periode ${formatPeriode(lpj.periode_id)}`}
