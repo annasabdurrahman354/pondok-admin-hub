@@ -37,7 +37,8 @@ const YayasanPeriods = () => {
       try {
         const { data, error } = await supabase
           .from('periode')
-          .select('*');
+          .select('*')
+          .order('id', { ascending: true });
         
         if (error) throw error;
         

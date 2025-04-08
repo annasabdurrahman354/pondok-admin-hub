@@ -69,7 +69,7 @@ const PondokLPJList = () => {
   }
 
   return (
-    <div>
+    <div className='space-y-6'>
       <PageHeader 
         title="Laporan Pertanggungjawaban"
         description="Daftar LPJ Pondok"

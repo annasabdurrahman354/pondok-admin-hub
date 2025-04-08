@@ -433,7 +433,7 @@ const PondokLPJCreate: React.FC = () => {
   
   if (!currentPeriodeId) {
     return (
-      <div className="bg-background">
+      <div className='space-y-6'>
         <PageHeader
           title="Laporan Pertanggungjawaban"
           description="Buat dan kelola LPJ Pondok"
@@ -457,7 +457,7 @@ const PondokLPJCreate: React.FC = () => {
   
   if (currentPeriodLPJ) {
     return (
-      <div className="bg-background">
+      <div className='space-y-6'>
         <PageHeader
           title="Laporan Pertanggungjawaban"
           description="Buat dan kelola LPJ Pondok"
@@ -485,7 +485,7 @@ const PondokLPJCreate: React.FC = () => {
   }
 
   return (
-    <div className="bg-background">
+    <div className='space-y-6'>
       <PageHeader 
         title="Buat LPJ Baru"
         description={`Periode ${currentPeriodeId?.substring(0, 4) || ''}-${currentPeriodeId?.substring(4, 6) || ''}`}

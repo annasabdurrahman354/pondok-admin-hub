@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
@@ -16,8 +15,8 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from '@/components/ui/table';
 
 const PondokRABDetail: React.FC = () => {
   const { rabId } = useParams<{ rabId: string }>();
@@ -92,7 +91,7 @@ const PondokRABDetail: React.FC = () => {
   // Error state
   if (isError || !rabDetail) {
     return (
-      <div className="bg-background">
+      <div className='space-y-6'>
         <PageHeader
           title="Detail RAB"
           description="Rencana Anggaran Biaya"
@@ -179,11 +178,8 @@ const PondokRABDetail: React.FC = () => {
     );
   };
 
-  const textSizeClass = isMobile ? "text-xs" : "text-sm";
-  const cardContentPadding = isMobile ? "p-2" : "p-4";
-
   return (
-    <div className="bg-background">
+    <div className='space-y-6'>
       <PageHeader
         title="Detail RAB"
         description={`Periode ${formatPeriode(rab.periode_id)}`}
@@ -199,8 +195,8 @@ const PondokRABDetail: React.FC = () => {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle className={isMobile ? "text-base" : "text-lg"}>RAB {formatPeriode(rab.periode_id)}</CardTitle>
-              <CardDescription className={isMobile ? "text-xs" : "text-sm"}>
+              <CardTitle className="text-base lg:text-lg">RAB {formatPeriode(rab.periode_id)}</CardTitle>
+              <CardDescription>
                 Dibuat pada: {formatDate(rab.created_at || '')}
               </CardDescription>
             </div>
@@ -210,13 +206,13 @@ const PondokRABDetail: React.FC = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className={`pb-3 ${cardContentPadding}`}>
+        <CardContent className="pb-3 p-2 lg:p-4">
           <div className="space-y-3">
             {rab.status === 'draft' && (
               <Alert className="p-3">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle className={textSizeClass}>RAB dalam status draft</AlertTitle>
-                <AlertDescription className={textSizeClass}>
+                <AlertTitle>RAB dalam status draft</AlertTitle>
+                <AlertDescription>
                   RAB ini belum diajukan ke Yayasan. Klik tombol "Ajukan RAB" untuk mengirimkan ke Yayasan.
                 </AlertDescription>
               </Alert>
@@ -225,8 +221,8 @@ const PondokRABDetail: React.FC = () => {
             {rab.status === 'revisi' && rab.pesan_revisi && (
               <Alert variant="destructive" className="p-3">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle className={textSizeClass}>Perlu Revisi</AlertTitle>
-                <AlertDescription className={textSizeClass}>
+                <AlertTitle>Perlu Revisi</AlertTitle>
+                <AlertDescription>
                   {rab.pesan_revisi}
                 </AlertDescription>
               </Alert>
@@ -235,34 +231,36 @@ const PondokRABDetail: React.FC = () => {
             <div className="space-y-4">
               <Tabs defaultValue="pemasukan" className="w-full">
                 <TabsList className="mb-3 h-9">
-                  <TabsTrigger value="pemasukan" className={textSizeClass}>Pemasukan</TabsTrigger>
-                  <TabsTrigger value="pengeluaran" className={textSizeClass}>Pengeluaran</TabsTrigger>
-                  <TabsTrigger value="summary" className={textSizeClass}>Ringkasan</TabsTrigger>
+                  <TabsTrigger value="pemasukan">Pemasukan</TabsTrigger>
+                  <TabsTrigger value="pengeluaran">Pengeluaran</TabsTrigger>
+                  <TabsTrigger value="summary">Ringkasan</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="pemasukan">
                   <Card className="border-none shadow-none bg-background/50">
                     <CardContent className="p-0">
-                      <div className="space-y-3">
-                        <div className="rounded-md border">
-                          <div className="bg-muted/50 p-2 flex items-center justify-between font-medium">
-                            <div className={textSizeClass}>Nama Pemasukan</div>
-                            <div className={textSizeClass}>Nominal</div>
-                          </div>
-                          <div className="divide-y">
-                            {pemasukan.map((item, index) => (
-                              <div key={index} className="p-2 flex items-center justify-between">
-                                <div className={textSizeClass}>{item.nama}</div>
-                                <div className={textSizeClass}>{formatCurrency(item.nominal)}</div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="bg-muted/30 p-2 flex items-center justify-between font-medium">
-                            <div className={textSizeClass}>Total Pemasukan</div>
-                            <div className={textSizeClass}>{formatCurrency(totalPemasukan)}</div>
-                          </div>
-                        </div>
-                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-3/4">Nama Pemasukan</TableHead>
+                            <TableHead className="text-right">Nominal</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pemasukan.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{item.nama}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(item.nominal)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                        <TableFooter>
+                          <TableRow>
+                            <TableCell>Total Pemasukan</TableCell>
+                            <TableCell className="text-right">{formatCurrency(totalPemasukan)}</TableCell>
+                          </TableRow>
+                        </TableFooter>
+                      </Table>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -270,30 +268,32 @@ const PondokRABDetail: React.FC = () => {
                 <TabsContent value="pengeluaran">
                   <Card className="border-none shadow-none bg-background/50">
                     <CardContent className="p-0">
-                      <div className="space-y-3">
-                        <div className="rounded-md border">
-                          <div className="bg-muted/50 p-2 grid grid-cols-12 gap-2 font-medium">
-                            <div className={`col-span-3 ${textSizeClass}`}>Kategori</div>
-                            <div className={`col-span-4 ${textSizeClass}`}>Nama</div>
-                            <div className={`col-span-3 ${textSizeClass}`}>Detail</div>
-                            <div className={`col-span-2 text-right ${textSizeClass}`}>Nominal</div>
-                          </div>
-                          <div className="divide-y">
-                            {pengeluaran.map((item, index) => (
-                              <div key={index} className="p-2 grid grid-cols-12 gap-2">
-                                <div className={`col-span-3 ${textSizeClass}`}>{item.kategori}</div>
-                                <div className={`col-span-4 ${textSizeClass}`}>{item.nama}</div>
-                                <div className={`col-span-3 ${textSizeClass}`}>{item.detail || '-'}</div>
-                                <div className={`col-span-2 text-right ${textSizeClass}`}>{formatCurrency(item.nominal)}</div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="bg-muted/30 p-2 flex items-center justify-between font-medium">
-                            <div className={textSizeClass}>Total Pengeluaran</div>
-                            <div className={textSizeClass}>{formatCurrency(totalPengeluaran)}</div>
-                          </div>
-                        </div>
-                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Kategori</TableHead>
+                            <TableHead>Nama</TableHead>
+                            <TableHead>Detail</TableHead>
+                            <TableHead className="text-right">Nominal</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pengeluaran.map((item, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{item.kategori}</TableCell>
+                              <TableCell>{item.nama}</TableCell>
+                              <TableCell>{item.detail || '-'}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(item.nominal)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                        <TableFooter>
+                          <TableRow>
+                            <TableCell colSpan={3}>Total Pengeluaran</TableCell>
+                            <TableCell className="text-right">{formatCurrency(totalPengeluaran)}</TableCell>
+                          </TableRow>
+                        </TableFooter>
+                      </Table>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -301,38 +301,45 @@ const PondokRABDetail: React.FC = () => {
                 <TabsContent value="summary">
                   <Card className="border-none shadow-none bg-background/50">
                     <CardContent className="p-0">
-                      <div className="space-y-3">
-                        <div className="bg-muted/30 p-3 rounded-md">
-                          <h3 className={`font-medium mb-2 ${isMobile ? "text-sm" : "text-base"}`}>Ringkasan Anggaran</h3>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className={textSizeClass}>Total Pemasukan:</span>
-                              <span className={`font-medium ${textSizeClass}`}>{formatCurrency(totalPemasukan)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className={textSizeClass}>Total Pengeluaran:</span>
-                              <span className={`font-medium ${textSizeClass}`}>{formatCurrency(totalPengeluaran)}</span>
-                            </div>
-                            <Separator />
-                            <div className="flex justify-between font-bold">
-                              <span className={textSizeClass}>Saldo Akhir:</span>
-                              <span className={`${saldo >= 0 ? "text-green-600" : "text-red-600"} ${textSizeClass}`}>
-                                {formatCurrency(saldo)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {saldo < 0 && (
-                          <Alert variant="destructive" className="p-3">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle className={textSizeClass}>Peringatan Saldo Negatif</AlertTitle>
-                            <AlertDescription className={textSizeClass}>
-                              Total pengeluaran melebihi total pemasukan.
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead colSpan={2} className="text-center">Ringkasan Anggaran</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>Total Pemasukan</TableCell>
+                            <TableCell className="text-right">{formatCurrency(totalPemasukan)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Total Pengeluaran</TableCell>
+                            <TableCell className="text-right">{formatCurrency(totalPengeluaran)}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                        <TableFooter>
+                          <TableRow>
+                            <TableCell className="font-bold">Saldo Akhir</TableCell>
+                            <TableCell 
+                              className={`text-right font-bold ${
+                                saldo >= 0 ? "text-green-600" : "text-red-600"
+                              }`}
+                            >
+                              {formatCurrency(saldo)}
+                            </TableCell>
+                          </TableRow>
+                        </TableFooter>
+                      </Table>
+                      
+                      {saldo < 0 && (
+                        <Alert variant="destructive" className="p-3 mt-3">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Peringatan Saldo Negatif</AlertTitle>
+                          <AlertDescription>
+                            Total pengeluaran melebihi total pemasukan.
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>

@@ -110,50 +110,6 @@ const LpjDetail = () => {
             <CardTitle>Informasi LPJ</CardTitle>
             <CardDescription>Pondok: {lpj.pondok?.nama || 'Unknown'}</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            {lpj.status === 'diajukan' && (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleApproveLPJ} disabled={approveLPJMutation.isPending}>
-                  <Check className="w-4 h-4 mr-2" />
-                  Setujui LPJ
-                </Button>
-                
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="destructive">
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Minta Revisi
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Permintaan Revisi LPJ</DialogTitle>
-                      <DialogDescription>
-                        Berikan keterangan tentang revisi yang perlu dilakukan
-                      </DialogDescription>
-                    </DialogHeader>
-                    <Textarea
-                      placeholder="Keterangan revisi..."
-                      className="min-h-[100px]"
-                      value={revisionMessage}
-                      onChange={(e) => setRevisionMessage(e.target.value)}
-                    />
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Batal</Button>
-                      </DialogClose>
-                      <Button 
-                        onClick={handleRequestRevision}
-                        disabled={!revisionMessage.trim() || requestLPJRevisionMutation.isPending}
-                      >
-                        Kirim Permintaan Revisi
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
-          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -297,6 +253,50 @@ const LpjDetail = () => {
               </Card>
             </TabsContent>
           </Tabs>
+          <div className="flex items-center justify-end gap-2 mt-6">
+            {lpj.status === 'diajukan' && (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleApproveLPJ} disabled={approveLPJMutation.isPending}>
+                  <Check className="w-4 h-4 mr-2" />
+                  Setujui LPJ
+                </Button>
+                
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="destructive">
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Minta Revisi
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Permintaan Revisi LPJ</DialogTitle>
+                      <DialogDescription>
+                        Berikan keterangan tentang revisi yang perlu dilakukan
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                      placeholder="Keterangan revisi..."
+                      className="min-h-[100px]"
+                      value={revisionMessage}
+                      onChange={(e) => setRevisionMessage(e.target.value)}
+                    />
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Batal</Button>
+                      </DialogClose>
+                      <Button 
+                        onClick={handleRequestRevision}
+                        disabled={!revisionMessage.trim() || requestLPJRevisionMutation.isPending}
+                      >
+                        Kirim Permintaan Revisi
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

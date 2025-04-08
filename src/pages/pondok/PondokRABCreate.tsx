@@ -163,7 +163,7 @@ const PondokRABCreate: React.FC = () => {
   
   if (!currentPeriodeId) {
     return (
-      <div className="bg-background">
+      <div className='space-y-6'>
         <PageHeader
           title="Rencana Anggaran Biaya"
           description="Buat dan kelola RAB Pondok"
@@ -187,7 +187,7 @@ const PondokRABCreate: React.FC = () => {
   
   if (currentPeriodRAB) {
     return (
-      <div className="bg-background">
+      <div className='space-y-6'>
         <PageHeader
           title="Rencana Anggaran Biaya"
           description="Buat dan kelola RAB Pondok"
@@ -215,7 +215,7 @@ const PondokRABCreate: React.FC = () => {
   }
 
   return (
-    <div className="bg-background">
+    <div className='space-y-6'>
       <PageHeader 
         title="Buat RAB Baru"
         description={`Periode ${currentPeriodeId?.substring(0, 4) || ''}-${currentPeriodeId?.substring(4, 6) || ''}`}

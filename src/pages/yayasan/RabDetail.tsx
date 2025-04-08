@@ -103,50 +103,6 @@ const RabDetail = () => {
             <CardTitle>Informasi RAB</CardTitle>
             <CardDescription>Pondok: {rab.pondok?.nama || 'Unknown'}</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            {rab.status === 'diajukan' && (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleApproveRAB} disabled={approveRABMutation.isPending}>
-                  <Check className="w-4 h-4 mr-2" />
-                  Setujui RAB
-                </Button>
-                
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="destructive">
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Minta Revisi
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Permintaan Revisi RAB</DialogTitle>
-                      <DialogDescription>
-                        Berikan keterangan tentang revisi yang perlu dilakukan
-                      </DialogDescription>
-                    </DialogHeader>
-                    <Textarea
-                      placeholder="Keterangan revisi..."
-                      className="min-h-[100px]"
-                      value={revisionMessage}
-                      onChange={(e) => setRevisionMessage(e.target.value)}
-                    />
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Batal</Button>
-                      </DialogClose>
-                      <Button 
-                        onClick={handleRequestRevision}
-                        disabled={!revisionMessage.trim() || requestRABRevisionMutation.isPending}
-                      >
-                        Kirim Permintaan Revisi
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
-          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -267,6 +223,50 @@ const RabDetail = () => {
               </Card>
             </TabsContent>
           </Tabs>
+          <div className="flex items-center justify-end gap-2 mt-6">
+            {rab.status === 'diajukan' && (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleApproveRAB} disabled={approveRABMutation.isPending}>
+                  <Check className="w-4 h-4 mr-2" />
+                  Setujui RAB
+                </Button>
+                
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="destructive">
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Minta Revisi
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Permintaan Revisi RAB</DialogTitle>
+                      <DialogDescription>
+                        Berikan keterangan tentang revisi yang perlu dilakukan
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                      placeholder="Keterangan revisi..."
+                      className="min-h-[100px]"
+                      value={revisionMessage}
+                      onChange={(e) => setRevisionMessage(e.target.value)}
+                    />
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Batal</Button>
+                      </DialogClose>
+                      <Button 
+                        onClick={handleRequestRevision}
+                        disabled={!revisionMessage.trim() || requestRABRevisionMutation.isPending}
+                      >
+                        Kirim Permintaan Revisi
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

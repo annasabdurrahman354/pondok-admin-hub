@@ -50,7 +50,7 @@ export const fetchPeriodes = async (): Promise<Periode[]> => {
     const { data, error } = await supabase
       .from('periode')
       .select('*')
-      .order('id', { ascending: false });
+      .order('id', { ascending: true });
     
     if (error) throw error;
     return data || [];
@@ -1048,3 +1048,57 @@ export const requestLPJRevision = async (lpjId: string, message: string): Promis
   }
 };
 
+export const calculateSisaSaldoFromLPJ = async (pondokId: string): Promise<number | null> => {
+  try {
+    // First, fetch the LPJ periode
+    const { data: lpjPeriode, error: periodeError } = await supabase
+      .from('periode')
+      .select('*')
+      .eq('tahap', 'LPJ')
+      .order('id', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (periodeError) throw periodeError;
+    
+    // Fetch the LPJ for this pondok and periode
+    const { data: lpj, error: lpjError } = await supabase
+      .from('lpj')
+      .select('id')
+      .eq('pondok_id', pondokId)
+      .eq('periode_id', lpjPeriode.id)
+      .single();
+    
+    if (lpjError) throw lpjError;
+    
+    // Fetch pemasukan and pengeluaran for this LPJ
+    const { data: pemasukan, error: pemasukanError } = await supabase
+      .from('lpj_pemasukan')
+      .select('*')
+      .eq('lpj_id', lpj.id);
+    
+    if (pemasukanError) throw pemasukanError;
+    
+    const { data: pengeluaran, error: pengeluaranError } = await supabase
+      .from('lpj_pengeluaran')
+      .select('*')
+      .eq('lpj_id', lpj.id);
+    
+    if (pengeluaranError) throw pengeluaranError;
+    
+    // Calculate total pemasukan (realisasi)
+    const totalPemasukan = pemasukan.reduce((sum, item) => sum + (item.realisasi || 0), 0);
+    
+    // Calculate total pengeluaran (realisasi)
+    const totalPengeluaran = pengeluaran.reduce((sum, item) => sum + (item.realisasi || 0), 0);
+    
+    // Calculate sisa saldo
+    const sisaSaldo = totalPemasukan - totalPengeluaran;
+    
+    return sisaSaldo;
+  } catch (error: any) {
+    console.error('Error calculating sisa saldo:', error);
+    toast.error('Gagal menghitung sisa saldo. Pastikan mengisi LPJ bulan sebelumnya terlebih dahulu!');
+    return null;
+  }
+};

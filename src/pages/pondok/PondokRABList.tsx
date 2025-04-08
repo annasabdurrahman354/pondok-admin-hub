@@ -69,7 +69,7 @@ const PondokRABList = () => {
   }
 
   return (
-    <div>
+    <div className='space-y-6'>
       <PageHeader 
         title="Rencana Anggaran Biaya"
         description="Daftar RAB Pondok"
